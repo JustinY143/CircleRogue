@@ -1,109 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Roguelike Framework</title>
+    <title>ClusterFuck Survivor</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #111; font-family: sans-serif; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; user-select: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
         
-        /* UI OVERLAY */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         
-        /* SCREENS (Menu, Death, etc.) - Enable pointer events only for these */
+        /* GENERAL SCREEN STYLES */
         .screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: auto; /* Allow clicking buttons */
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
+            display: flex; flex-direction: column; 
+            pointer-events: auto;
         }
         
+        /* MAIN MENU SPECIFIC */
+        #main-menu { align-items: flex-start; justify-content: center; padding-left: 100px; }
         .hidden { display: none !important; }
 
-        h1 { color: white; font-size: 60px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 5px; }
-        h2 { color: #ccc; margin-bottom: 40px; }
+        /* HUD ELEMENTS */
+        #exp-header { position: absolute; top: 0; left: 0; width: 100%; height: 14px; background: rgba(0, 0, 0, 0.6); z-index: 20; border-bottom: 1px solid #333; }
+        #exp-bar-fill { height: 100%; width: 0%; background: linear-gradient(to bottom, #0066ff, #00d4ff); transition: width 0.2s ease-out; }
+        #level-text { position: absolute; top: 18px; right: 20px; color: white; font-weight: bold; font-size: 20px; z-index: 20; text-shadow: 2px 2px 4px black; }
         
-        button {
-            background: #333; color: white; border: 2px solid #555; padding: 15px 40px; 
-            font-size: 24px; cursor: pointer; margin: 10px; transition: 0.2s;
-            text-transform: uppercase; font-weight: bold;
+        #hud { position: absolute; top: 35px; left: 20px; pointer-events: none; }
+        .hp-container { width: 30vw; max-width: 600px; height: 35px; background: #222; border: 3px solid #444; position: relative; overflow: hidden; }
+        #hp-bar-fill { height: 100%; width: 100%; background: #ff4444; transition: width 0.1s; }
+        .hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; z-index: 2; text-shadow: 1px 1px 2px black; }
+        
+        #timer-display { position: absolute; top: 25px; width: 100%; text-align: center; color: white; font-size: 40px; font-weight: bold; pointer-events: none; text-shadow: 3px 3px 5px black; }
+
+        h1 { color: white; font-size: 80px; margin: 0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 5px; }
+        
+        .menu-btn {
+            background: #222; color: white; border: 3px solid #444; 
+            width: 300px; height: 60px; font-size: 24px; cursor: pointer; margin: 10px 0; 
+            transition: all 0.2s; font-family: 'Segoe UI', sans-serif; font-weight: bold;
+            text-align: left; padding-left: 20px; display: flex; align-items: center;
+            position: relative;
         }
-        button:hover { background: #555; border-color: #888; transform: scale(1.05); }
+        .menu-btn:hover { background: #444; border-color: #00d4ff; padding-left: 30px; }
 
-        /* HUD (Heads Up Display) */
-        #hud { position: absolute; top: 20px; left: 20px; pointer-events: none; }
-        .bar-container { width: 250px; height: 25px; background: #333; margin-bottom: 10px; position: relative; border: 2px solid #555; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
-        .bar-text { position: absolute; top: 0; left: 10px; color: white; line-height: 25px; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px black; }
-
-        /* CHARACTER CARDS */
-        .char-select-container { display: flex; gap: 20px; }
-        .char-card { 
-            background: #222; border: 2px solid #444; padding: 20px; 
-            text-align: center; cursor: pointer; transition: 0.2s; width: 150px;
+        /* DIFFICULTY DROPDOWN */
+        .flyout {
+            position: absolute; left: 310px; top: -3px;
+            background: #111; border: 3px solid #555;
+            display: none; flex-direction: column; z-index: 100;
         }
-        .char-card:hover { background: #333; border-color: white; transform: translateY(-5px); }
-        .char-icon { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; }
-		
-		.playing-cursor { cursor: none; } /* Hides system cursor when playing */
+        #btn-difficulty:hover .flyout { display: flex; }
+        .flyout-btn {
+            background: #222; color: #aaa; border: none; border-bottom: 1px solid #333;
+            width: 200px; padding: 15px; text-align: left; cursor: pointer; font-size: 18px; font-weight: bold;
+        }
+        .flyout-btn:hover { background: #333; color: white; }
+        .force-hide { display: none !important; }
 
-		/* Small adjustment to make the color picker look better */
-		#settings-menu input { margin: 20px; width: 100px; height: 50px; cursor: pointer; }
+        .center-screen { align-items: center; justify-content: center; }
+        
+        /* UPGRADE CARDS */
+        .upgrade-card { 
+            background: #1a1a1a; border: 4px solid #333; padding: 20px; 
+            text-align: center; cursor: pointer; transition: 0.2s; 
+            width: 220px; color: white;
+        }
+        .upgrade-card:hover { border-color: #00d4ff; background: #222; transform: translateY(-10px); }
+        .ascii-icon { font-family: 'Courier New', monospace; font-size: 48px; color: #00d4ff; margin-bottom: 15px; font-weight: bold; }
+
+        .char-card { background: #1a1a1a; border: 4px solid #333; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; width: 180px; color: white; }
+        .char-card:hover { border-color: #00d4ff; background: #222; }
+        .char-icon { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 10px; }
     </style>
 </head>
-<body>
+<body id="game-body">
+    <div id="exp-header" class="hidden"><div id="exp-bar-fill"></div></div>
+    <div id="level-text" class="hidden">LV. 1</div>
     <canvas id="gameCanvas"></canvas>
-    
     <div id="ui-layer">
+        <div id="timer-display" class="hidden">00:00</div>
+        
         <div id="hud" class="hidden">
-            <div class="bar-container">
-                <div id="hp-bar" class="bar-fill" style="background: #ff4444; width: 100%;"></div>
-                <span id="hp-text" class="bar-text">10/10 HP</span>
-            </div>
-            <div class="bar-container">
-                <div id="exp-bar" class="bar-fill" style="background: #4488ff; width: 0%;"></div>
-                <span id="exp-text" class="bar-text">Lvl 1</span>
+            <div class="hp-container">
+                <div id="hp-bar-fill"></div>
+                <div id="hp-text" class="hp-text">100 / 100</div>
             </div>
         </div>
 
         <div id="main-menu" class="screen">
-        <h1>ClusterFuck</h1>
-        <button onclick="Game.toCharSelect()">Start Game</button>
-        <button onclick="Game.toSettings()" style="font-size: 18px;">Settings</button>
-    </div>
-
-    <div id="settings-menu" class="screen hidden">
-        <h1>Settings</h1>
-        <div style="color: white; font-size: 24px;">
-            <label>Crosshair Color</label><br>
-            <input type="color" id="crosshairColorPicker" value="#ff69b4" onchange="Game.updateCrosshairColor(this.value)">
-        </div>
-        <button onclick="Game.toMainMenu()">Back to Menu</button>
-    </div>
-
-        <div id="char-select" class="screen hidden">
-            <h1>Choose Class</h1>
-            <div class="char-select-container">
-                <div class="char-card" onclick="Game.start('gunner')">
-                    <div class="char-icon" style="background: #D8BFD8;"></div> <h3>Gunner</h3>
-                    <p>Ranged<br>Shoots Bullets</p>
-                </div>
-                <div class="char-card" onclick="Game.start('swordsman')">
-                    <div class="char-icon" style="background: #00ff00;"></div> <h3>Swordsman</h3>
-                    <p>Melee<br>Wide Slash</p>
+            <h1>ClusterFuck</h1>
+            <button class="menu-btn" onclick="Game.toCharSelect()">PLAY</button>
+            <button class="menu-btn" onclick="Game.toUpgrades()">UPGRADES</button>
+            
+            <div id="btn-difficulty" class="menu-btn">
+                DIFFICULTY: <span id="diff-label" style="margin-left:10px; color:#00d4ff;">NOVICE</span>
+                <div id="diff-flyout" class="flyout">
+                    <button class="flyout-btn" onclick="Game.setDifficulty('BEGINNER')">BEGINNER</button>
+                    <button class="flyout-btn" onclick="Game.setDifficulty('NOVICE')">NOVICE</button>
+                    <button class="flyout-btn" onclick="Game.setDifficulty('HARD')">HARD</button>
+                    <button id="btn-diff-unknown" class="flyout-btn hidden" onclick="Game.setDifficulty('UNKNOWN')">???</button>
                 </div>
             </div>
-            <button onclick="Game.toMainMenu()" style="margin-top:40px; font-size: 16px;">Back</button>
+
+            <button class="menu-btn" onclick="Game.toSettings()">SETTINGS</button>
         </div>
 
-        <div id="game-over" class="screen hidden">
-            <h1 style="color: #ff4444;">You Died</h1>
-            <h2 id="death-stats">Level Reached: 1</h2>
-            <button onclick="Game.toCharSelect()">Retry</button>
-            <button onclick="Game.toMainMenu()">Main Menu</button>
+        <div id="levelup-menu" class="screen center-screen hidden">
+            <h1 style="color: #FFD700; margin-bottom: 10px;">LEVEL UP!</h1>
+            <p style="color: #ccc; margin-bottom: 30px;">Choose an Augment</p>
+            <div id="upgrade-cards-container" style="display: flex; gap: 20px;"></div>
+        </div>
+
+        <div id="char-select" class="screen center-screen hidden">
+            <h1 style="margin-bottom: 40px;">Select Class</h1>
+            <div style="display: flex; gap: 40px;">
+                <div class="char-card" onclick="Game.start('gunner')">
+                    <div class="char-icon" style="background: #D8BFD8;"></div>
+                    <h3>Gunner</h3>
+                </div>
+                <div class="char-card" onclick="Game.start('swordsman')">
+                    <div class="char-icon" style="background: #00ff00;"></div>
+                    <h3>Swordsman</h3>
+                </div>
+            </div>
+            <button class="menu-btn" style="text-align:center; width:200px; margin-top:50px; padding:0; justify-content:center;" onclick="Game.toMainMenu()">Back</button>
+        </div>
+
+        <div id="pause-menu" class="screen center-screen hidden">
+            <h1>PAUSED</h1>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.togglePause()">RESUME</button>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.toMainMenu()">QUIT</button>
+        </div>
+
+        <div id="game-over" class="screen center-screen hidden">
+            <h1 style="color: #ff4444;">DEFEATED</h1>
+            <h2 id="death-stats" style="color:#ccc; text-align:center; margin-bottom: 30px;"></h2>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.toCharSelect()">RETRY</button>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.toMainMenu()">MAIN MENU</button>
+        </div>
+        
+        <div id="upgrades-menu" class="screen center-screen hidden">
+            <h1>BLACK MARKET</h1>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.toMainMenu()">BACK</button>
+        </div>
+        
+        <div id="settings-menu" class="screen center-screen hidden">
+            <h1>SETTINGS</h1>
+            <button class="menu-btn" style="text-align:center; padding:0; justify-content:center;" onclick="Game.toMainMenu()">BACK</button>
         </div>
     </div>
 
     <script src="utils.js"></script>
+    <script src="enemies.js"></script>
     <script src="entities.js"></script>
     <script src="main.js"></script>
 </body>
