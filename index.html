@@ -6,7 +6,7 @@
         body { margin: 0; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; user-select: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: flex; flex-direction: column; pointer-events: auto; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); display: flex; flex-direction: column; pointer-events: auto; }
         #main-menu { align-items: flex-start; justify-content: center; padding-left: 100px; }
         .hidden { display: none !important; }
 
@@ -16,11 +16,11 @@
         /* UPDATED: Level Text Bigger */
         #level-text { position: absolute; top: 18px; right: 20px; color: white; font-weight: bold; font-size: 30px; z-index: 20; text-shadow: 2px 2px 4px black; }
         
-        #hud { position: absolute; top: 35px; left: 20px; pointer-events: none; }
+        #hud { position: absolute; top: 35px; left: 20px; pointer-events: none; z-index: 25; }
         .hp-container { width: 30vw; max-width: 600px; height: 35px; background: #222; border: 3px solid #444; position: relative; overflow: hidden; }
         #hp-bar-fill { height: 100%; width: 100%; background: #ff4444; transition: width 0.1s; }
         .hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; z-index: 2; text-shadow: 1px 1px 2px black; }
-        #timer-display { position: absolute; top: 25px; width: 100%; text-align: center; color: white; font-size: 40px; font-weight: bold; pointer-events: none; text-shadow: 3px 3px 5px black; }
+        #timer-display { position: absolute; top: 25px; width: 100%; text-align: center; color: white; font-size: 40px; font-weight: bold; pointer-events: none; text-shadow: 3px 3px 5px black; z-index: 25; }
 
         h1 { color: white; font-size: 80px; margin: 0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 5px; }
         
@@ -59,6 +59,119 @@
         
         #btn-reset { position: absolute; bottom: 30px; right: 30px; background: #500; color: #faa; border: 2px solid #800; padding: 10px 20px; cursor: pointer; font-weight: bold; }
         #btn-reset:hover { background: #800; color: white; }
+        
+        /* Add blur effect to HUD when game is in overlay state (pause, level up, death) */
+        .game-overlay-active .hp-container,
+        .game-overlay-active #timer-display,
+        .game-overlay-active #exp-header,
+        .game-overlay-active #level-text {
+            filter: blur(4px);
+            opacity: 0.8; /* Slightly transparent but still visible */
+        }
+
+        /* Stats display in pause menu */
+        #pause-stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 16px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        /* Reset confirmation screen */
+        #reset-confirm {
+            background: rgba(0,0,0,0.9);
+        }
+        
+        .reset-warning {
+            color: #ff4444;
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Unlock notification */
+        #unlock-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            color: white;
+            padding: 40px;
+            border: 4px solid #00d4ff;
+            border-radius: 15px;
+            z-index: 1001;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(0, 212, 255, 0.5);
+        }
+
+        #unlock-notification h2 {
+            color: #00d4ff;
+            margin: 0 0 20px 0;
+            font-size: 32px;
+        }
+
+        #unlock-notification p {
+            font-size: 22px;
+            margin: 0 0 30px 0;
+            color: #fff;
+        }
+
+        #close-unlock-notification {
+            background: linear-gradient(to bottom, #222, #000);
+            color: white;
+            border: 2px solid #00d4ff;
+            padding: 15px 40px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        #close-unlock-notification:hover {
+            background: linear-gradient(to bottom, #00d4ff, #0088cc);
+            color: black;
+            transform: scale(1.05);
+        }
+
+        /* Low Health Border Effect */
+        #low-health-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            box-shadow: inset 0 0 60px 30px rgba(255, 0, 0, 0.3);
+            border: 8px solid transparent;
+        }
+
+        /* Low health pulsing effect */
+        .low-health-pulse {
+            animation: lowHealthPulse 1.2s infinite alternate;
+        }
+
+        @keyframes lowHealthPulse {
+            0% {
+                box-shadow: inset 0 0 60px 30px rgba(255, 0, 0, 0.3);
+                border-color: rgba(255, 0, 0, 0.1);
+            }
+            100% {
+                box-shadow: inset 0 0 80px 40px rgba(255, 0, 0, 0.5);
+                border-color: rgba(255, 0, 0, 0.3);
+            }
+        }
     </style>
 </head>
 <body id="game-body">
@@ -66,6 +179,9 @@
     <div id="level-text" class="hidden">LV. 1</div>
     <canvas id="gameCanvas"></canvas>
     <div id="ui-layer">
+        <!-- Low Health Border Effect -->
+        <div id="low-health-border" class="hidden"></div>
+        
         <div id="timer-display" class="hidden">00:00</div>
         
         <div id="hud" class="hidden">
@@ -118,6 +234,7 @@
             <h1>PAUSED</h1>
             <button class="menu-btn btn-centered" onclick="Game.togglePause()">RESUME</button>
             <button class="menu-btn btn-centered" onclick="Game.toMainMenu()">QUIT</button>
+            <div id="pause-stats"></div>
         </div>
 
         <div id="game-over" class="screen center-screen hidden">
@@ -139,7 +256,7 @@
                 </div>
                 <div class="upgrade-card">
                     <h3>STRENGTH</h3>
-                    <p>+1 Damage</p>
+                    <p>+2 Damage</p>
                     <p id="lvl-dmg">Lvl: 0</p>
                     <button class="upgrade-btn" onclick="Game.buyUpgrade('dmg')">Buy (1500 Pts)</button>
                 </div>
@@ -147,7 +264,7 @@
                     <h3>PRECISION</h3>
                     <p>+5% Crit Chance</p>
                     <p id="lvl-crit">Lvl: 0</p>
-                    <button class="upgrade-btn" onclick="Game.buyUpgrade('crit')">Buy (1000 Pts)</button>
+                    <button class="upgrade-btn" onclick="Game.buyUpgrade('crit')">Buy (2000 Pts)</button>
                 </div>
             </div>
             <button class="menu-btn btn-centered" style="width:200px;" onclick="Game.toMainMenu()">BACK</button>
@@ -162,11 +279,37 @@
             <button class="menu-btn btn-centered" style="width:200px;" onclick="Game.toMainMenu()">BACK</button>
             <button id="btn-reset" onclick="Game.resetProgress()">RESET DATA</button>
         </div>
+
+        <div id="reset-confirm" class="screen center-screen hidden">
+            <h1 style="color: #ff4444;">WARNING!</h1>
+            <div class="reset-warning">This will DELETE ALL YOUR PROGRESS</div>
+            <p style="color: #ccc; margin-bottom: 40px; text-align: center; max-width: 600px;">
+                All points, upgrades, and unlocked difficulties will be permanently erased.<br>
+                This action cannot be undone!
+            </p>
+            <button class="menu-btn btn-centered" style="background: #800; border-color: #f00;" onclick="Game.confirmReset()">YES, WIPE ALL DATA</button>
+            <button class="menu-btn btn-centered" onclick="Game.cancelReset()">CANCEL</button>
+        </div>
     </div>
 
+    <!-- Core utility files -->
     <script src="utils.js"></script>
     <script src="enemies.js"></script>
     <script src="entities.js"></script>
-    <script src="main.js"></script>
+    
+    <!-- Modular game files -->
+    <script src="game_state.js"></script>
+    <script src="ui.js"></script>
+    <script src="input.js"></script>
+    <script src="dev_mode.js"></script>
+    <script src="game_loop.js"></script>
+    
+    <!-- Initialize game -->
+    <script>
+        window.onload = function() {
+            Game.load();
+            initGame();
+        };
+    </script>
 </body>
 </html>
