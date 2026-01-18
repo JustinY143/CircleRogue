@@ -3,7 +3,6 @@ class Player {
         this.x = x; this.y = y; this.radius = 20; this.color = color;
         this.speed = SETTINGS.PLAYER_SPEED;
         
-        // Safety check: if upgrades is missing, use default zeros
         const stats = upgrades || { hp: 0, dmg: 0, crit: 0 };
         
         const bonusHP = (stats.hp || 0) * 10; 
@@ -17,69 +16,58 @@ class Player {
 
         this.level = 1; this.exp = 0; this.expNext = Utils.getExpReq(1);
         this.attackTimer = 0; this.dead = false;
-        this.iframeTimer = 0; // Added for hit detection
+        this.iframeTimer = 0;
     }
 
     calculateDamage(baseDmg) {
         let multiplier = 1;
         let chance = this.stats.critChance;
-
-        // Overcrit Logic (150% crit = 100% chance for 2x, 50% chance for 4x)
         while (chance > 0) {
-            if (Math.random() < chance) {
-                multiplier *= 2; 
-            }
+            if (Math.random() < chance) multiplier *= 2; 
             chance -= 1.0;
         }
         return baseDmg * multiplier;
     }
 
     updateBase(keys) {
-		let moveX = 0;
-		let moveY = 0;
+        let moveX = 0; let moveY = 0;
+        if (keys['w']) moveY -= 1;
+        if (keys['s']) moveY += 1;
+        if (keys['a']) moveX -= 1;
+        if (keys['d']) moveX += 1;
 
-		// 1. Capture intended direction
-		if (keys['w']) moveY -= 1;
-		if (keys['s']) moveY += 1;
-		if (keys['a']) moveX -= 1;
-		if (keys['d']) moveX += 1;
-
-		// 2. Normalize diagonal movement to prevent speed boost
-		if (moveX !== 0 || moveY !== 0) {
-			const length = Math.sqrt(moveX * moveX + moveY * moveY);
-			this.x += (moveX / length) * this.speed;
-			this.y += (moveY / length) * this.speed;
-		}
-		
-		Utils.clampToWorld(this);
-		
-		if (this.attackTimer > 0) this.attackTimer--;
-		if (this.iframeTimer > 0) this.iframeTimer--;
-	}
-	
+        if (moveX !== 0 || moveY !== 0) {
+            const length = Math.sqrt(moveX * moveX + moveY * moveY);
+            this.x += (moveX / length) * this.speed;
+            this.y += (moveY / length) * this.speed;
+        }
+        
+        Utils.clampToWorld(this);
+        if (this.attackTimer > 0) this.attackTimer--;
+        if (this.iframeTimer > 0) this.iframeTimer--;
+    }
+    
     takeDamage(dmg) { 
-        if (this.iframeTimer > 0) return; // Fix invincibility: only skip if timer is active
+        if (this.iframeTimer > 0) return; 
         this.hp -= dmg; 
-        this.iframeTimer = 20; // Brief invincibility after hit
+        this.iframeTimer = 20; 
         if (this.hp <= 0) this.dead = true; 
     }
 
-    // New Heal method for the level-up system
     heal(amount) {
         this.hp = Math.min(this.maxHp, this.hp + amount);
     }
-	
+    
     gainExp(amount) {
-		this.exp += amount;
-		if (this.exp >= this.expNext) {
-			this.exp -= this.expNext; 
-			this.level++;
-			this.expNext = Utils.getExpReq(this.level);
-			this.hp = Math.min(this.maxHp, this.hp + 20); 
-        
-			Game.toLevelUp(); // <--- ADD THIS (Triggers the menu)
-		}
-	}
+        this.exp += amount;
+        if (this.exp >= this.expNext) {
+            this.exp -= this.expNext; 
+            this.level++;
+            this.expNext = Utils.getExpReq(this.level);
+            this.hp = Math.min(this.maxHp, this.hp + 20); 
+            Game.toLevelUp(); 
+        }
+    }
     draw(ctx) {
         ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
         ctx.fillStyle = this.color; ctx.fill();
@@ -88,9 +76,7 @@ class Player {
 }
 
 class Gunner extends Player {
-    constructor(x, y, upgrades) {
-        super(x, y, '#D8BFD8', upgrades);
-    }
+    constructor(x, y, upgrades) { super(x, y, '#D8BFD8', upgrades); }
     attack(ax, ay, bullets) {
         if (this.attackTimer > 0) return;
         const angle = Math.atan2(ay, ax);
@@ -161,18 +147,18 @@ class Particle {
         this.vx = Math.cos(a)*5; this.vy = Math.sin(a)*5;
     }
     update(player) {
-		this.x += this.vx; this.y += this.vy; this.vx *= 0.9; this.vy *= 0.9;
-		const d = Utils.getDist(this, player);
-		if(d < 160) { 
-			const a = Math.atan2(player.y - this.y, player.x - this.x);
-			const s = (160 - d) / 20;
-			this.x += Math.cos(a) * s; this.y += Math.sin(a) * s;
-		}
-		if(d < player.radius + this.radius) { 
-			player.gainExp(this.value * 2); // FIX: Double EXP gain
-			this.dead = true; 
-		}
-	}
+        this.x += this.vx; this.y += this.vy; this.vx *= 0.9; this.vy *= 0.9;
+        const d = Utils.getDist(this, player);
+        if(d < 160) { 
+            const a = Math.atan2(player.y - this.y, player.x - this.x);
+            const s = (160 - d) / 20;
+            this.x += Math.cos(a) * s; this.y += Math.sin(a) * s;
+        }
+        if(d < player.radius + this.radius) { 
+            player.gainExp(this.value); 
+            this.dead = true; 
+        }
+    }
     draw(ctx) {
         ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
         ctx.fillStyle = '#00d4ff'; 
