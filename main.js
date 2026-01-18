@@ -5,7 +5,6 @@ const Game = {
     frameCount: 0, score: 0, startTime: 0, elapsedTime: 0,
     bossActive: false,
     
-    // ZOOM SETTING (1.15 = 15% closer)
     ZOOM_LEVEL: 1.15,
 
     saveData: {
@@ -16,7 +15,6 @@ const Game = {
     currentDifficulty: 'NOVICE',
     resetConfirmCount: 0, 
 
-    // UI Refs
     uiMenu: document.getElementById('main-menu'),
     uiSelect: document.getElementById('char-select'),
     uiHUD: document.getElementById('hud'),
@@ -38,7 +36,7 @@ const Game = {
 
     toLevelUp: () => {
         Game.isPaused = true;
-        Game.updateUI(); // Force cursor update immediately
+        Game.updateUI();
         Game.uiLevelUp.classList.remove('hidden');
         
         const shuffled = [...Game.upgradePool].sort(() => 0.5 - Math.random());
@@ -71,7 +69,6 @@ const Game = {
         } else if (id === 'heal') {
             Game.player.heal(20);
         }
-        
         Game.uiLevelUp.classList.add('hidden');
         Game.isPaused = false;
         Game.updateUI();
@@ -103,7 +100,7 @@ const Game = {
         Game.updateUI();
     },
     buyUpgrade: (type) => {
-        const costMap = { hp: 1000, dmg: 2500, crit: 2000 };
+        const costMap = { hp: 750, dmg: 1500, crit: 1000 };
         const cost = costMap[type];
         if (Game.saveData.points >= cost) {
             Game.saveData.points -= cost;
@@ -144,12 +141,10 @@ const Game = {
         const screens = [Game.uiMenu, Game.uiSelect, Game.uiHUD, Game.uiDeath, Game.uiSettings, Game.uiTimer, Game.uiPause, Game.uiExpHeader, Game.uiLevelText, Game.uiUpgrades, Game.uiLevelUp];
         screens.forEach(el => el.classList.add('hidden'));
 
-        // --- CURSOR & UI LOGIC ---
-        // Cursor is HIDDEN only if: State is PLAYING AND Not Paused AND Not in LevelUp
         const isGameplay = (Game.state === 'PLAYING' && !Game.isPaused);
         
         if (isGameplay) {
-            document.body.style.cursor = 'none'; // Hide system cursor
+            document.body.style.cursor = 'none';
             document.body.classList.add('playing-cursor');
             
             Game.uiHUD.classList.remove('hidden');
@@ -157,10 +152,8 @@ const Game = {
             Game.uiExpHeader.classList.remove('hidden');
             Game.uiLevelText.classList.remove('hidden');
         } else {
-            document.body.style.cursor = 'default'; // SHOW system cursor
+            document.body.style.cursor = 'default';
             document.body.classList.remove('playing-cursor');
-            
-            // If Paused, we still show HUD but overlay the menu
             if (Game.state === 'PAUSED' || Game.isPaused) {
                 Game.uiHUD.classList.remove('hidden');
                 Game.uiTimer.classList.remove('hidden');
@@ -175,10 +168,7 @@ const Game = {
         if (Game.state === 'SETTINGS') Game.uiSettings.classList.remove('hidden');
         if (Game.state === 'PAUSED') Game.uiPause.classList.remove('hidden');
         if (Game.state === 'UPGRADES') Game.uiUpgrades.classList.remove('hidden');
-        
-        // Show Level Up screen if paused via level up trigger
         if (Game.isPaused && Game.state === 'PLAYING' && !Game.uiLevelUp.classList.contains('hidden')) {
-            // keep it visible
             Game.uiLevelUp.classList.remove('hidden');
         }
     },
@@ -239,11 +229,7 @@ function update() {
     const player = Game.player;
     player.updateBase(keys);
     
-    // --- AIM CALCULATION (Adjusted for Zoom) ---
     if (mouse.down) {
-        // Because of camera translation and scale, we need to adjust calculating aim vector
-        // Center is (CANVAS.width/2, CANVAS.height/2)
-        // We calculate difference from center, then divide by zoom to match world scale
         const ax = (mouse.x - CANVAS.width/2) / Game.ZOOM_LEVEL;
         const ay = (mouse.y - CANVAS.height/2) / Game.ZOOM_LEVEL;
         
@@ -251,27 +237,34 @@ function update() {
         else player.attack(ax, ay, Game.slashes, Game.enemies);
     }
 
+    // --- SPAWNING LOGIC ---
     let currentSpawnRate = SETTINGS.BASE_SPAWN_RATE;
+    // Ramp up difficulty after 7 minutes
     if (Game.elapsedTime > 420) {
         currentSpawnRate = Math.max(20, SETTINGS.BASE_SPAWN_RATE - (Game.elapsedTime - 420));
     }
+    
+    // SPAWN CHECK
+    let shouldSpawn = false;
+    let spawnCheckRate = Math.floor(currentSpawnRate);
 
+    // If boss is active, SPAWN LESS (Half as often)
     if (Game.bossActive) {
-        // No mob spawns
-    } else {
-        let isBossTime = (Math.floor(Game.elapsedTime) === 420 && !Spawner.bossSpawned);
-        
-        if (isBossTime || Game.frameCount % Math.floor(currentSpawnRate) === 0) {
-            const angle = Math.random() * Math.PI * 2;
-            const spawnDist = 1500; 
-            const sx = player.x + Math.cos(angle) * spawnDist;
-            const sy = player.y + Math.sin(angle) * spawnDist;
+        spawnCheckRate = Math.floor(currentSpawnRate * 2); 
+    }
 
-            const enemy = Spawner.spawn(sx, sy, Game.elapsedTime, Game.currentDifficulty);
-            if (enemy) {
-                if (enemy.isBoss) Game.bossActive = true;
-                Game.enemies.push(enemy);
-            }
+    let isBossTime = (Math.floor(Game.elapsedTime) === 420 && !Spawner.bossSpawned);
+    
+    if (isBossTime || Game.frameCount % spawnCheckRate === 0) {
+        const angle = Math.random() * Math.PI * 2;
+        const spawnDist = 1500; 
+        const sx = player.x + Math.cos(angle) * spawnDist;
+        const sy = player.y + Math.sin(angle) * spawnDist;
+
+        const enemy = Spawner.spawn(sx, sy, Game.elapsedTime, Game.currentDifficulty);
+        if (enemy) {
+            if (enemy.isBoss) Game.bossActive = true;
+            Game.enemies.push(enemy);
         }
     }
 
@@ -300,9 +293,38 @@ function update() {
         });
     });
 
+    // PROJECTILE COLLISION (Arrows & Lasers)
     Game.enemyProjectiles.forEach(ep => {
         if (!ep.dead) {
-            if (Utils.getDist(ep, player) < ep.radius + player.radius) {
+            let hit = false;
+            
+            if (ep.isLaser) {
+                // LASER COLLISION (Line vs Circle approx)
+                // If player is close enough to boss, we check the angle
+                const distToSource = Math.sqrt((player.x - ep.x)**2 + (player.y - ep.y)**2);
+                if (distToSource < 1200) { // Laser Length
+                    const angleToPlayer = Math.atan2(player.y - ep.y, player.x - ep.x);
+                    let angleDiff = angleToPlayer - ep.angle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI*2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI*2;
+                    
+                    // Laser width is ~100px. At distance D, angular width is ~ (width/D).
+                    // Simplified: Check perpendicular distance
+                    const perpDist = Math.abs(Math.sin(angleDiff) * distToSource);
+                    
+                    // If within width (50 radius + player radius) AND in front of boss
+                    if (perpDist < (ep.radius + player.radius) && Math.abs(angleDiff) < Math.PI/2) {
+                         hit = true;
+                    }
+                }
+            } else {
+                // ARROW COLLISION
+                if (Utils.getDist(ep, player) < ep.radius + player.radius) {
+                    hit = true;
+                }
+            }
+
+            if (hit) {
                 player.takeDamage(ep.damage);
                 if (!ep.isLaser) ep.dead = true; 
             }
@@ -340,13 +362,8 @@ function draw() {
         const player = Game.player;
         
         CTX.save();
-        
-        // --- CAMERA ZOOM & CENTER ---
-        // 1. Move to center of screen
         CTX.translate(CANVAS.width / 2, CANVAS.height / 2);
-        // 2. Scale (Zoom)
         CTX.scale(Game.ZOOM_LEVEL, Game.ZOOM_LEVEL);
-        // 3. Translate world so player is at (0,0) relative to previous transforms
         CTX.translate(-player.x, -player.y);
 
         CTX.strokeStyle = '#222'; CTX.lineWidth = 2;
@@ -362,8 +379,6 @@ function draw() {
         
         CTX.restore();
         
-        // Draw crosshair on top (Screen Space)
-        // If playing and not paused, draw crosshair. 
         if (Game.state === 'PLAYING' && !Game.isPaused) {
             drawCrosshair(mouse.x, mouse.y, SETTINGS.CROSSHAIR_COLOR);
         }
