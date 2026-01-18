@@ -1,4 +1,4 @@
-#CircleRogue
+# CircleRogue
 A roguelite bullet heaven where you shoot dots...
 
 How to Play
@@ -8,14 +8,14 @@ Mouse to aim
 Left Click to attack
 ESC to pause
 
-#Classes
+# Classes
 Gunner: Ranged attacks with bullets
 Swordsman: Melee attacks with area slashes
 
-#Play Online
+# Play Online
 The game is hosted on GitHub Pages. Just open the link and play in your browser.
 
-#Development
+# Development
 To run locally:
 Clone the repo
 Open index.html in a browser
