@@ -1,4 +1,4 @@
-# ClusterRogue
+# CircleRogue
 A roguelite bullet heaven where you shoot dots...
 
 How to Play

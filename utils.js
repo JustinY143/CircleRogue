@@ -7,13 +7,13 @@ const WORLD_HEIGHT = 5000;
 const DIFFICULTY_MODS = {
     BEGINNER: { hp: 0.7, dmg: 0.7, score: 0.5 },
     NOVICE:   { hp: 1.0, dmg: 1.0, score: 1.0 },
-    HARD:     { hp: 1.5, dmg: 1.5, score: 2.0 },
-    UNKNOWN:  { hp: 2.5, dmg: 2.5, score: 5.0 }
+    HARD:     { hp: 2.0, dmg: 2.0, score: 2.0 },
+    UNKNOWN:  { hp: 4.0, dmg: 4.0, score: 4.0 }
 };
 
 const PLAYER_STATS = {
     GUNNER: { hp: 100, speed: 1.5 },
-    SWORDSMAN: { hp: 150, speed: 1.6 }
+    SWORDSMAN: { hp: 150, speed: 1.65 }
 };
 
 const UPGRADE_SYSTEM = {
@@ -33,11 +33,11 @@ const SPAWNING = {
 
 const COMBAT = {
     BULLET_SPEED: 3,
-    BULLET_COOLDOWN: 30,
+    BULLET_COOLDOWN: 40,
     BULLET_DAMAGE: 5,
     BULLET_LIFE: 1200,
     
-    SWORD_COOLDOWN: 40,
+    SWORD_COOLDOWN: 45,
     SWORD_DAMAGE: 10,
     SWORD_RADIUS: 180,
     SWORD_ARC: Math.PI / 1.85,
