@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cluster!Buster</title>
+    <title>Cluster!Rogue</title>
     <style>
         body { margin: 0; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; user-select: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
@@ -172,6 +172,116 @@
                 border-color: rgba(255, 0, 0, 0.3);
             }
         }
+
+        /* Achievements CSS */
+        #achievements-menu {
+            align-items: center;
+            overflow-y: auto;
+            padding: 40px 0;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 90%;
+            margin: 20px 0;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .achievement-card {
+            background: #1a1a1a;
+            border: 3px solid #333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .achievement-card.unlocked .achievement-icon {
+			color: gold;
+			text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+		}
+
+		.achievement-card.locked .achievement-icon {
+			color: #666;
+		}
+
+		.achievement-icon {
+			font-size: 40px;
+			margin-bottom: 10px;
+			height: 50px;
+			font-weight: bold;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+        .achievement-title {
+            font-size: 20px;
+            color: #00d4ff;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .achievement-desc {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .achievement-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .achievement-status.unlocked {
+            color: gold;
+        }
+
+        /* Achievement Notification */
+        .achievement-notification-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .achievement-notification .achievement-icon {
+            font-size: 50px;
+            margin: 0;
+        }
+
+        .achievement-notification .achievement-text {
+            flex: 1;
+        }
+
+        .achievement-notification .achievement-title {
+            color: gold;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-notification .achievement-name {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-notification .achievement-desc {
+            color: #ccc;
+            font-size: 14px;
+            margin: 0;
+        }
     </style>
 </head>
 <body id="game-body">
@@ -192,7 +302,7 @@
         </div>
 
         <div id="main-menu" class="screen">
-            <h1>Cluster!Buster</h1>
+            <h1>Cluster!Rogue</h1>
             <button class="menu-btn" onclick="Game.toCharSelect()">PLAY</button>
             <button class="menu-btn" onclick="Game.toUpgrades()">UPGRADES</button>
             
@@ -206,7 +316,20 @@
                 </div>
             </div>
 
+            <!-- NEW ACHIEVEMENTS BUTTON -->
+            <button class="menu-btn" onclick="Game.toAchievements()">ACHIEVEMENTS</button>
+
             <button class="menu-btn" onclick="Game.toSettings()">SETTINGS</button>
+        </div>
+
+        <!-- NEW ACHIEVEMENTS MENU -->
+        <div id="achievements-menu" class="screen hidden">
+            <h1>ACHIEVEMENTS</h1>
+            <div id="total-achievements" style="color:#FFD700; font-size:24px; margin-bottom:20px;">
+                Unlocked: <span id="unlocked-count">0</span>/<span id="total-count">0</span>
+            </div>
+            <div id="achievements-container" class="achievements-grid"></div>
+            <button class="menu-btn btn-centered" style="width:200px; margin-top:20px;" onclick="Game.toMainMenu()">BACK</button>
         </div>
 
         <div id="levelup-menu" class="screen center-screen hidden">
@@ -304,6 +427,9 @@
     <script src="dev_mode.js"></script>
     <script src="game_loop.js"></script>
     
+    <!-- NEW Achievements file -->
+    <script src="achievements.js"></script>
+    
     <!-- Initialize game -->
     <script>
         window.onload = function() {
@@ -312,5 +438,4 @@
         };
     </script>
 </body>
-
 </html>

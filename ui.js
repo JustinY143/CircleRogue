@@ -4,20 +4,21 @@ const UI = {
     init: function() {
         // Cache UI elements
         UI.elements = {
-            menu: document.getElementById('main-menu'),
-            select: document.getElementById('char-select'),
-            hud: document.getElementById('hud'),
-            death: document.getElementById('game-over'),
-            settings: document.getElementById('settings-menu'),
-            upgrades: document.getElementById('upgrades-menu'),
-            pause: document.getElementById('pause-menu'),
-            expHeader: document.getElementById('exp-header'),
-            levelText: document.getElementById('level-text'),
-            timer: document.getElementById('timer-display'),
-            levelUp: document.getElementById('levelup-menu'),
-            resetConfirm: document.getElementById('reset-confirm'),
-            lowHealthBorder: document.getElementById('low-health-border'),
-            unlockNotification: null
+			menu: document.getElementById('main-menu'),
+			select: document.getElementById('char-select'),
+			hud: document.getElementById('hud'),
+			death: document.getElementById('game-over'),
+			settings: document.getElementById('settings-menu'),
+			upgrades: document.getElementById('upgrades-menu'),
+			pause: document.getElementById('pause-menu'),
+			expHeader: document.getElementById('exp-header'),
+			levelText: document.getElementById('level-text'),
+			timer: document.getElementById('timer-display'),
+			levelUp: document.getElementById('levelup-menu'),
+			resetConfirm: document.getElementById('reset-confirm'),
+			lowHealthBorder: document.getElementById('low-health-border'),
+			achievements: document.getElementById('achievements-menu'),
+			unlockNotification: null
         };
         
         Game.uiElements = UI.elements;
@@ -69,7 +70,38 @@ const UI = {
             UI.elements.unlockNotification.style.display = 'block';
         }
     },
-
+	
+	populateAchievements: function() {
+		const container = document.getElementById('achievements-container');
+		container.innerHTML = '';
+		
+		if (!Achievements || !Achievements.list) return;
+		
+		const achievements = Achievements.list;
+		let unlockedCount = 0;
+		
+		achievements.forEach(achievement => {
+			const isUnlocked = achievement.check();
+			if (isUnlocked) unlockedCount++;
+			
+			const card = document.createElement('div');
+			card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+			card.innerHTML = `
+				<div class="achievement-icon">${achievement.icon}</div>
+				<div class="achievement-title">${achievement.name}</div>
+				<div class="achievement-desc">${achievement.description}</div>
+				<div class="achievement-status ${isUnlocked ? 'unlocked' : ''}">
+					${isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+				</div>
+			`;
+			container.appendChild(card);
+		});
+		
+		// Update counters
+		document.getElementById('unlocked-count').textContent = unlockedCount;
+		document.getElementById('total-count').textContent = achievements.length;
+	},
+	
     populateLevelUpCards: function() {
         const container = document.getElementById('upgrade-cards-container');
         container.innerHTML = '';
@@ -102,7 +134,8 @@ const UI = {
         const screens = [
             UI.elements.menu, UI.elements.select, UI.elements.death,
             UI.elements.settings, UI.elements.upgrades, UI.elements.pause,
-            UI.elements.levelUp, UI.elements.resetConfirm
+            UI.elements.levelUp, UI.elements.resetConfirm,
+			UI.elements.achievements
         ];
         
         // Hide all screens first
@@ -156,6 +189,7 @@ const UI = {
         if (Game.state === 'UPGRADES') UI.elements.upgrades.classList.remove('hidden');
         if (Game.state === 'RESET_CONFIRM') UI.elements.resetConfirm.classList.remove('hidden');
         if (Game.state === 'LEVELUP') UI.elements.levelUp.classList.remove('hidden');
+		if (Game.state === 'ACHIEVEMENTS') UI.elements.achievements.classList.remove('hidden');
         
         // Update stats in pause menu
         if (Game.state === 'PAUSED' && Game.player) {

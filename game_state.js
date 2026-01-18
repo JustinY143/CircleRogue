@@ -7,13 +7,26 @@ const Game = {
     bossActive: false,
     devMode: false,
     
+    // Track kills for achievements
+    currentRunKills: 0,
+    
     ZOOM_LEVEL: 1.15,
 
     saveData: {
         points: 0,
         upgrades: { hp: 0, dmg: 0, crit: 0 },
         unlockedHardBoss: false,
-        pendingUnlockNotification: false
+        pendingUnlockNotification: false,
+        achievements: {
+            unlocked: {},
+            bossKillsByDiff: {},
+            totalKills: 0,
+            maxKillsInRun: 0,
+            totalPointsEarned: 0,
+            maxPointsInRun: 0,
+            maxSurvivalTime: 0,
+            deathCount: 0
+        }
     },
     currentDifficulty: 'NOVICE',
 
@@ -57,7 +70,24 @@ const Game = {
 
     load: function() {
         const data = localStorage.getItem('ClusterFuckSave');
-        if (data) Game.saveData = JSON.parse(data);
+        if (data) {
+            const parsed = JSON.parse(data);
+            Game.saveData = parsed;
+            
+            // Initialize achievements if they don't exist
+            if (!Game.saveData.achievements) {
+                Game.saveData.achievements = {
+                    unlocked: {},
+                    bossKillsByDiff: {},
+                    totalKills: 0,
+                    maxKillsInRun: 0,
+                    totalPointsEarned: Game.saveData.points || 0,
+                    maxPointsInRun: 0,
+                    maxSurvivalTime: 0,
+                    deathCount: 0
+                };
+            }
+        }
         
         // Immediately show ??? button if unlocked
         if (Game.saveData.unlockedHardBoss) {
@@ -86,6 +116,12 @@ const Game = {
     toUpgrades: function() {
         Game.state = 'UPGRADES';
         UI.updateUpgradeUI();
+        UI.update();
+    },
+
+    toAchievements: function() {
+        Game.state = 'ACHIEVEMENTS';
+        UI.populateAchievements();
         UI.update();
     },
     
@@ -166,6 +202,9 @@ const Game = {
         Game.isPaused = false; Game.isTimePaused = false;
         Game.lastUpdateTime = Date.now();
         
+        // Reset run stats
+        Game.currentRunKills = 0;
+        
         Spawner.bossSpawned = false; 
         Game.bossActive = false;
         
@@ -183,7 +222,18 @@ const Game = {
         Game.state = 'GAMEOVER';
         let diffMult = DIFFICULTY_MODS[Game.currentDifficulty].score;
         let pointsEarned = Math.floor((Game.score + Game.elapsedTime) * diffMult);
+        
+        // Calculate kills (each enemy gives 5 score points)
+        const kills = Game.score / 5;
+        
+        // Update save data
         Game.saveData.points += pointsEarned;
+        
+        // Record achievements
+        if (Achievements && Achievements.recordRunStats) {
+            Achievements.recordRunStats(kills, pointsEarned, Game.elapsedTime);
+        }
+        
         Game.save();
         document.getElementById('death-stats').innerHTML = 
             `SURVIVED: ${Utils.formatTime(Game.elapsedTime)}<br>POINTS: ${pointsEarned}`;
@@ -203,6 +253,22 @@ const Game = {
             Game.save();
             
             // Don't show alert here - it will be shown when returning to main menu
+        }
+        
+        // Record boss kill for achievements
+        if (Achievements && Achievements.recordBossKill) {
+            Achievements.recordBossKill(Game.currentDifficulty);
+        }
+    },
+
+    // Helper function to track enemy kills
+    recordEnemyKill: function() {
+        Game.currentRunKills++;
+        if (Game.saveData.achievements) {
+            Game.saveData.achievements.totalKills++;
+            if (Game.currentRunKills > Game.saveData.achievements.maxKillsInRun) {
+                Game.saveData.achievements.maxKillsInRun = Game.currentRunKills;
+            }
         }
     }
 };

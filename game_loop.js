@@ -110,13 +110,19 @@ function update() {
 
     // Handle enemy deaths
     Game.enemies.forEach(e => { 
-        if (e.dead && !e.scoreCounted) {
-            if (e.isBoss) Game.bossKilled();
-            Game.particles.push(new Particle(e.x, e.y, e.expValue)); 
-            Game.score += SETTINGS.BASE_EXP_PER_KILL; 
-            e.scoreCounted = true;
-        } 
-    });
+		if (e.dead && !e.scoreCounted) {
+			if (e.isBoss) Game.bossKilled();
+			Game.particles.push(new Particle(e.x, e.y, e.expValue)); 
+			Game.score += SETTINGS.BASE_EXP_PER_KILL; 
+			
+			// Record kill for achievements
+			if (Game.recordEnemyKill) {
+				Game.recordEnemyKill();
+			}
+			
+			e.scoreCounted = true;
+		} 
+	});
 
     // Check player death
     if (player.dead) Game.die();
