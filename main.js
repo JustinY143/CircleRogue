@@ -30,7 +30,7 @@ const Game = {
     upgradePool: [
         { id: 'hp', title: 'Vitality', desc: 'Max HP +10', icon: '[ + ]' },
         { id: 'dmg', title: 'Strength', desc: 'Attack DMG +1', icon: '[ ! ]' },
-        { id: 'crit', title: 'Deadly Aim', desc: 'Crit Chance +2%', icon: '[ * ]' },
+        { id: 'crit', title: 'Deadly Aim', desc: 'Crit Chance +5%', icon: '[ * ]' },
         { id: 'heal', title: 'Recovery', desc: 'Heal 20 HP', icon: '[ H ]' }
     ],
 
@@ -65,7 +65,7 @@ const Game = {
         } else if (id === 'dmg') {
             Game.player.stats.dmg += 1;
         } else if (id === 'crit') {
-            Game.player.stats.critChance += 0.02;
+            Game.player.stats.critChance += 0.05;
         } else if (id === 'heal') {
             Game.player.heal(20);
         }

@@ -11,7 +11,7 @@ class Player {
         
         this.stats = {
             dmg: (stats.dmg || 0) * 1,
-            critChance: (stats.crit || 0) * 0.02
+            critChance: (stats.crit || 0) * 0.05
         };
 
         this.level = 1; this.exp = 0; this.expNext = Utils.getExpReq(1);

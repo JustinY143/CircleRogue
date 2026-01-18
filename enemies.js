@@ -201,10 +201,10 @@ const Spawner = {
     bossSpawned: false,
     types: {
         BASIC:  { color: 'red', hp: 8, speed: 1.3, damage: 2, exp: 10, radius: 15 },
-        FAST:   { color: '#FFD700', hp: 5, speed: 2.2, damage: 1, exp: 15, radius: 13 },
+        FAST:   { color: '#FFD700', hp: 5, speed: 2.2, damage: 2, exp: 15, radius: 13 },
         TANK:   { color: '#8B0000', hp: 40, speed: 1.0, damage: 5, exp: 50, radius: 35 },
         ARCHER: { color: '#006400', hp: 15, speed: 0.7, damage: 10, exp: 30, radius: 18, isArcher: true },
-        BOSS:   { color: '#4B0082', hp: 3000, speed: 1.4, damage: 20, exp: 10000, radius: 80, isBoss: true }
+        BOSS:   { color: '#4B0082', hp: 1500, speed: 1.25, damage: 20, exp: 300, radius: 80, isBoss: true }
     },
     spawn: (x, y, time, diffName) => {
         const mult = DIFFICULTY_MODS[diffName];
