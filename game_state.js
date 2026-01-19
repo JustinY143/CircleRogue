@@ -55,23 +55,27 @@ const Game = {
     },
 
     applyInGameUpgrade: function(id) {
-        if (id === 'hp') {
-            Game.player.maxHp += Utils.getUpgradeAmount('hp');
-            Game.player.hp += Utils.getUpgradeAmount('hp');
-        } else if (id === 'dmg') {
-            Game.player.stats.dmg += Utils.getUpgradeAmount('dmg');
-        } else if (id === 'crit') {
-            Game.player.stats.critChance += Utils.getUpgradeAmount('crit');
-        } else if (id === 'heal') {
-            const healAmount = Math.floor(Game.player.maxHp * SETTINGS.UPGRADE_SYSTEM.HEAL_UPGRADE_PERCENT);
-            Game.player.heal(healAmount);
-        }
-        Game.uiElements.levelUp.classList.add('hidden');
-        Game.isPaused = false;
-        Game.isTimePaused = false;
-        Game.state = 'PLAYING';
-        UI.update();
-    },
+		if (id === 'hp') {
+			Game.player.maxHp += Utils.getUpgradeAmount('hp');
+			Game.player.hp += Utils.getUpgradeAmount('hp');
+		} else if (id === 'dmg') {
+			Game.player.stats.dmg += Utils.getUpgradeAmount('dmg');
+		} else if (id === 'crit') {
+			Game.player.stats.critChance += Utils.getUpgradeAmount('crit');
+		} else if (id === 'heal') {
+			const healAmount = Math.floor(Game.player.maxHp * SETTINGS.UPGRADE_SYSTEM.HEAL_UPGRADE_PERCENT);
+			Game.player.heal(healAmount);
+		}
+		Game.uiElements.levelUp.classList.add('hidden');
+		Game.isPaused = false;
+		Game.isTimePaused = false;
+		
+		// FIX: Update lastUpdateTime to prevent time jump
+		Game.lastUpdateTime = Date.now();
+		
+		Game.state = 'PLAYING';
+		UI.update();
+	},
 
     load: function() {
         const data = localStorage.getItem('ClusterBusterSave');
@@ -212,21 +216,26 @@ const Game = {
     },
     
     togglePause: function() {
-        if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED' && Game.state !== 'QUIT_CONFIRM') return;
-        
-        // If in quit confirmation, close it instead of toggling pause
-        if (Game.state === 'QUIT_CONFIRM') {
-            Game.state = 'PAUSED';
-            Game.isPaused = true;
-            Game.isTimePaused = true;
-        } else {
-            Game.isPaused = !Game.isPaused;
-            Game.isTimePaused = Game.isPaused;
-            Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
-        }
-        
-        UI.update();
-    },
+		if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED' && Game.state !== 'QUIT_CONFIRM') return;
+		
+		// If in quit confirmation, close it instead of toggling pause
+		if (Game.state === 'QUIT_CONFIRM') {
+			Game.state = 'PAUSED';
+			Game.isPaused = true;
+			Game.isTimePaused = true;
+		} else {
+			Game.isPaused = !Game.isPaused;
+			Game.isTimePaused = Game.isPaused;
+			Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
+			
+			// FIX: Update lastUpdateTime when unpausing to prevent time jump
+			if (!Game.isPaused) {
+				Game.lastUpdateTime = Date.now();
+			}
+		}
+		
+		UI.update();
+	},
 
     start: function(classType) {
         Game.bullets = []; Game.enemies = []; Game.particles = []; Game.slashes = []; Game.enemyProjectiles = [];
