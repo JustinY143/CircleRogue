@@ -13,7 +13,7 @@ const DIFFICULTY_MODS = {
 
 const PLAYER_STATS = {
     GUNNER: { hp: 100, speed: 1.5 },
-    SWORDSMAN: { hp: 150, speed: 1.65 }
+    SWORDSMAN: { hp: 175, speed: 1.7 }
 };
 
 const UPGRADE_SYSTEM = {
@@ -101,4 +101,5 @@ const Utils = {
 		}
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
+
 };
