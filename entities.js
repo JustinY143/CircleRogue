@@ -216,7 +216,7 @@ class Particle {
             this.x += Math.cos(a) * s; this.y += Math.sin(a) * s;
         }
         if(d < player.radius + this.radius) { 
-            player.gainExp(this.value); 
+            player.gainExp(this.value * 2); 
             this.dead = true; 
         }
     }

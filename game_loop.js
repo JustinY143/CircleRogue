@@ -154,7 +154,10 @@ function update() {
 function draw() {
     CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
     
-    if (Game.state === 'PLAYING' || Game.state === 'PAUSED' || Game.state === 'GAMEOVER') {
+    // FIX: Added LEVELUP and QUIT_CONFIRM to this check so the background renders
+    const renderStates = ['PLAYING', 'PAUSED', 'GAMEOVER', 'LEVELUP', 'QUIT_CONFIRM'];
+    
+    if (renderStates.includes(Game.state)) {
         const player = Game.player;
         
         CTX.save();
@@ -162,21 +165,19 @@ function draw() {
         CTX.scale(Game.ZOOM_LEVEL, Game.ZOOM_LEVEL);
         CTX.translate(-player.x, -player.y);
 
-        // Draw grid
+        // Draw grid - Optimized to batch strokes
         CTX.strokeStyle = '#222'; 
         CTX.lineWidth = 2;
+        CTX.beginPath();
         for(let x = 0; x <= WORLD_WIDTH; x += 100) { 
-            CTX.beginPath(); 
             CTX.moveTo(x, 0); 
             CTX.lineTo(x, WORLD_HEIGHT); 
-            CTX.stroke(); 
         }
         for(let y = 0; y <= WORLD_HEIGHT; y += 100) { 
-            CTX.beginPath(); 
             CTX.moveTo(0, y); 
             CTX.lineTo(WORLD_WIDTH, y); 
-            CTX.stroke(); 
         }
+        CTX.stroke();
 
         // Draw all entities
         Game.particles.forEach(p => p.draw(CTX));

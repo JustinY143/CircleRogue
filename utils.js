@@ -17,9 +17,9 @@ const PLAYER_STATS = {
 };
 
 const UPGRADE_SYSTEM = {
-    hp: { baseCost: 750, costIncrease: 200, amount: 10 },
-    dmg: { baseCost: 1500, costIncrease: 300, amount: 2 },
-    crit: { baseCost: 2000, costIncrease: 400, amount: 0.05 },
+    hp: { baseCost: 750, costIncrease: 250, amount: 10 },
+    dmg: { baseCost: 1000, costIncrease: 500, amount: 2 },
+    crit: { baseCost: 1250, costIncrease: 500, amount: 0.05 },
     HEAL_UPGRADE_PERCENT: 0.25
 };
 
@@ -39,9 +39,9 @@ const COMBAT = {
     
     SWORD_COOLDOWN: 45,
     SWORD_DAMAGE: 10,
-    SWORD_RADIUS: 180,
-    SWORD_ARC: Math.PI / 1.85,
-    SWORD_DURATION: 12,
+    SWORD_RADIUS: 220,
+    SWORD_ARC: Math.PI / 2.3,
+    SWORD_DURATION: 20,
     
     PLAYER_IFRAME_TIME: 20
 };

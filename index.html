@@ -21,6 +21,7 @@
             z-index: 0; 
             width: 100%;
             height: 100%;
+            transition: filter 0.2s ease-out; /* Added smooth transition for blur */
         }
         #ui-layer { 
             position: absolute; 
@@ -270,10 +271,12 @@
         }
         #btn-reset:hover { background: #800; color: white; }
         
+        /* MODIFIED: Added canvas to the blur list */
         .game-overlay-active .hp-container,
         .game-overlay-active #timer-display,
         .game-overlay-active #exp-header,
-        .game-overlay-active #level-text {
+        .game-overlay-active #level-text,
+        .game-overlay-active canvas {
             filter: blur(4px);
             opacity: 0.8;
         }
@@ -677,7 +680,6 @@
             <button class="menu-btn" onclick="Game.toSettings()">SETTINGS</button>
         </div>
 
-        <!-- Achievements Menu -->
         <div id="achievements-menu" class="screen hidden">
             <div class="achievements-header">
                 <h1>ACHIEVEMENTS</h1>
@@ -690,23 +692,19 @@
                 <div id="achievements-container" class="achievements-grid"></div>
             </div>
             
-            <!-- Individual buttons with absolute positioning -->
             <button id="achievements-stats-btn" onclick="Game.toPlayerStats()">PLAYER STATS</button>
             <button id="achievements-back-btn" onclick="Game.toMainMenu()">BACK</button>
         </div>
 
-        <!-- Player Stats Menu -->
         <div id="player-stats-menu" class="screen hidden">
             <h1>PLAYER STATS</h1>
             <div class="stats-container">
                 <div id="stats-content">
-                    <!-- Will be populated by JavaScript -->
-                </div>
+                    </div>
                 <button class="menu-btn btn-centered" style="width:200px; margin-top:30px;" onclick="Game.toAchievements()">BACK</button>
             </div>
         </div>
 
-        <!-- Quit Confirmation Popup -->
         <div id="quit-confirm" class="screen center-screen hidden">
             <h1 style="color: #ff4444;">QUIT TO MAIN MENU?</h1>
             <p style="color: #ccc; margin-bottom: 40px; text-align: center; max-width: 600px;">
@@ -716,7 +714,6 @@
             <button class="menu-btn btn-centered" style="width:200px;" onclick="Game.cancelQuit()">CANCEL</button>
         </div>
 
-        <!-- Rest of your existing screens (levelup, char-select, pause, game-over, upgrades, settings, reset-confirm) -->
         <div id="levelup-menu" class="screen center-screen hidden">
             <h1 style="color: #FFD700; margin-bottom: 10px;">LEVEL UP!</h1>
             <p style="color: #ccc; margin-bottom: 30px;">Choose an Augment</p>
@@ -800,22 +797,18 @@
         </div>
     </div>
 
-    <!-- Core utility files -->
     <script src="utils.js"></script>
     <script src="enemies.js"></script>
     <script src="entities.js"></script>
     
-    <!-- Modular game files -->
     <script src="game_state.js"></script>
     <script src="ui.js"></script>
     <script src="input.js"></script>
     <script src="dev_mode.js"></script>
     <script src="game_loop.js"></script>
     
-    <!-- NEW Achievements file -->
     <script src="achievements.js"></script>
     
-    <!-- Initialize game -->
     <script>
         window.onload = function() {
             Game.load();
