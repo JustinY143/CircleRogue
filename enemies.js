@@ -96,27 +96,27 @@ class Enemy {
         if (this.bossState === 0) {
             this.speed = this.baseSpeed;
             this.timer++;
-            if (this.timer > 200) {
+            if (this.timer > 400) {	//cooldown
                 this.bossState = 1;
                 this.timer = 0;
             }
         }
         else if (this.bossState === 1) {
-            this.speed = this.baseSpeed * 0.5;
+            this.speed = this.baseSpeed * 0.4;
             
             if (this.timer === 0) {
                 this.aimAngle = Math.atan2(target.y - this.y, target.x - this.x);
             }
             
             this.timer++;
-            if (this.timer > 90) {
+            if (this.timer > 110) {		//time to shoot
                 this.bossState = 2;
                 this.timer = 0;
                 projectiles.push(new EnemyProjectile(this.x, this.y, this.aimAngle, this.damage * 2, true));
             }
         }
         else if (this.bossState === 2) {
-            this.speed = this.baseSpeed * 0.5;
+            this.speed = this.baseSpeed * 0.4;
             this.timer++;
             if (this.timer > 30) {
                 this.bossState = 0;
@@ -182,7 +182,7 @@ const Spawner = {
         FAST:   { color: '#FFD700', hp: 5, speed: 2.2, damage: 2, exp: 15, radius: 13 },
         TANK:   { color: '#8B0000', hp: 40, speed: 1.0, damage: 5, exp: 50, radius: 35 },
         ARCHER: { color: '#006400', hp: 15, speed: 0.7, damage: 10, exp: 30, radius: 18, isArcher: true },
-        BOSS:   { color: '#4B0082', hp: 1500, speed: 1.25, damage: 20, exp: 300, radius: 80, isBoss: true }
+        BOSS:   { color: '#4B0082', hp: 2000, speed: 1.0, damage: 20, exp: 300, radius: 80, isBoss: true }
     },
     spawn: (x, y, time, diffName) => {
         const mult = DIFFICULTY_MODS[diffName];
