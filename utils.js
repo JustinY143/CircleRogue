@@ -12,8 +12,8 @@ const DIFFICULTY_MODS = {
 };
 
 const PLAYER_STATS = {
-    GUNNER: { hp: 100, speed: 1.5 },
-    SWORDSMAN: { hp: 175, speed: 1.7 }
+    GUNNER: { hp: 100, speed: 5 },
+    SWORDSMAN: { hp: 175, speed: 7 }
 };
 
 const UPGRADE_SYSTEM = {
@@ -24,7 +24,7 @@ const UPGRADE_SYSTEM = {
 };
 
 const SPAWNING = {
-    BASE_SPAWN_RATE: 150,
+    BASE_SPAWN_RATE: 80,
     RAMP_SPAWN_TIME: 420,
     RAMP_SPAWN_RATE_MIN: 20,
     BOSS_SPAWN_TIME: 420,
@@ -32,16 +32,16 @@ const SPAWNING = {
 };
 
 const COMBAT = {
-    BULLET_SPEED: 3,
-    BULLET_COOLDOWN: 40,
+    BULLET_SPEED: 15,
+    BULLET_COOLDOWN: 15,
     BULLET_DAMAGE: 5,
-    BULLET_LIFE: 1200,
+    BULLET_LIFE: 180,
     
-    SWORD_COOLDOWN: 45,
+    SWORD_COOLDOWN: 15,
     SWORD_DAMAGE: 10,
     SWORD_RADIUS: 220,
     SWORD_ARC: Math.PI / 2.3,
-    SWORD_DURATION: 20,
+    SWORD_DURATION: 10,
     
     PLAYER_IFRAME_TIME: 20
 };
@@ -66,6 +66,11 @@ const SETTINGS = {
 };
 
 const Utils = {
+    lastTime: 0,
+    fps: 60,
+    frameCount: 0,
+    fpsTime: 0,
+    
     getDist: (obj1, obj2) => Math.sqrt((obj1.x - obj2.x) ** 2 + (obj1.y - obj2.y) ** 2),
     getExpReq: (level) => SETTINGS.EXP_FORMULA(level),
     clampToWorld: (obj) => {
@@ -92,14 +97,32 @@ const Utils = {
     },
     
     formatTime: (seconds) => {
-		const hours = Math.floor(seconds / 3600);
-		const mins = Math.floor((seconds % 3600) / 60);
-		const secs = Math.floor(seconds % 60);
-		
-		if (hours > 0) {
-			return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-		}
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
-
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        
+        if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    },
+    
+    // Get delta time for frame-independent movement
+    getDeltaTime: function() {
+        const now = Date.now();
+        const deltaTime = now - Utils.lastTime;
+        Utils.lastTime = now;
+        
+        // Calculate FPS
+        Utils.frameCount++;
+        Utils.fpsTime += deltaTime;
+        if (Utils.fpsTime >= 1000) {
+            Utils.fps = Math.round((Utils.frameCount * 1000) / Utils.fpsTime);
+            Utils.frameCount = 0;
+            Utils.fpsTime = 0;
+        }
+        
+        // Cap delta time to prevent physics issues
+        return Math.min(deltaTime / 16.67, 2.5); // Cap at 2.5x normal speed
+    }
 };

@@ -2,7 +2,6 @@ const UI = {
     elements: {},
 
     init: function() {
-        // Cache UI elements
         UI.elements = {
             menu: document.getElementById('main-menu'),
             select: document.getElementById('char-select'),
@@ -20,12 +19,11 @@ const UI = {
             achievements: document.getElementById('achievements-menu'),
             playerStats: document.getElementById('player-stats-menu'),
             unlockNotification: null,
-            quitConfirm: document.getElementById('quit-confirm') // Added
+            quitConfirm: document.getElementById('quit-confirm')
         };
         
         Game.uiElements = UI.elements;
         
-        // Create unlock notification element (hidden by default)
         UI.createUnlockNotification();
     },
 
@@ -61,7 +59,6 @@ const UI = {
         document.body.appendChild(notification);
         UI.elements.unlockNotification = notification;
         
-        // Add close button event
         document.getElementById('close-unlock-notification').onclick = function() {
             notification.style.display = 'none';
         };
@@ -73,6 +70,13 @@ const UI = {
         }
     },
     
+    updateFPSButton: function() {
+        const fpsButton = document.getElementById('toggle-fps-btn');
+        if (fpsButton) {
+            fpsButton.textContent = Game.showFPS ? 'Hide FPS' : 'Show FPS';
+        }
+    },
+    
     populatePlayerStats: function() {
         const container = document.getElementById('stats-content');
         if (!container) return;
@@ -80,10 +84,8 @@ const UI = {
         const stats = Game.saveData.achievements || {};
         const upgrades = Game.saveData.upgrades || {};
         
-        // Calculate total upgrades
         const totalUpgrades = (upgrades.hp || 0) + (upgrades.dmg || 0) + (upgrades.crit || 0);
         
-        // Calculate playtime in hours
         const playTimeHours = (stats.totalPlayTime || 0) / 3600;
         
         container.innerHTML = `
@@ -170,7 +172,6 @@ const UI = {
             container.appendChild(card);
         });
         
-        // Update counters
         document.getElementById('unlocked-count').textContent = unlockedCount;
         document.getElementById('total-count').textContent = achievements.length;
     },
@@ -179,7 +180,6 @@ const UI = {
         const container = document.getElementById('upgrade-cards-container');
         container.innerHTML = '';
         
-        // Get 3 random upgrades from the pool
         const availableUpgrades = [...Game.upgradePool];
         const selectedUpgrades = [];
         
@@ -189,7 +189,6 @@ const UI = {
             availableUpgrades.splice(randomIndex, 1);
         }
         
-        // Create cards for each selected upgrade
         selectedUpgrades.forEach(upgrade => {
             const card = document.createElement('div');
             card.className = 'upgrade-card';
@@ -209,35 +208,30 @@ const UI = {
             UI.elements.settings, UI.elements.upgrades, UI.elements.pause,
             UI.elements.levelUp, UI.elements.resetConfirm,
             UI.elements.achievements, UI.elements.playerStats,
-            UI.elements.quitConfirm // Added
+            UI.elements.quitConfirm
         ];
         
-        // Hide all screens first
         screens.forEach(el => el.classList.add('hidden'));
 
-        // Hide HUD elements by default
         UI.elements.hud.classList.add('hidden');
         UI.elements.timer.classList.add('hidden');
         UI.elements.expHeader.classList.add('hidden');
         UI.elements.levelText.classList.add('hidden');
         UI.elements.lowHealthBorder.classList.add('hidden');
 
-        // Check if we're in an overlay state
         const isOverlayState = (
             Game.state === 'PAUSED' || 
             Game.state === 'GAMEOVER' || 
             Game.state === 'LEVELUP' ||
-            Game.state === 'QUIT_CONFIRM' // Added
+            Game.state === 'QUIT_CONFIRM'
         );
 
-        // Toggle overlay class on body
         if (isOverlayState) {
             document.body.classList.add('game-overlay-active');
         } else {
             document.body.classList.remove('game-overlay-active');
         }
 
-        // Show HUD elements only during gameplay states
         if (Game.state === 'PLAYING' || Game.state === 'PAUSED' || Game.state === 'GAMEOVER' || Game.state === 'LEVELUP' || Game.state === 'QUIT_CONFIRM') {
             UI.elements.hud.classList.remove('hidden');
             UI.elements.timer.classList.remove('hidden');
@@ -246,7 +240,6 @@ const UI = {
             UI.elements.lowHealthBorder.classList.remove('hidden');
         }
 
-        // Handle cursor
         if (Game.state === 'PLAYING' && !Game.isPaused) {
             document.body.style.cursor = 'none';
             document.body.classList.add('playing-cursor');
@@ -255,25 +248,25 @@ const UI = {
             document.body.classList.remove('playing-cursor');
         }
 
-        // Show appropriate screen
         if (Game.state === 'MENU') UI.elements.menu.classList.remove('hidden');
         if (Game.state === 'SELECT') UI.elements.select.classList.remove('hidden');
         if (Game.state === 'GAMEOVER') UI.elements.death.classList.remove('hidden');
-        if (Game.state === 'SETTINGS') UI.elements.settings.classList.remove('hidden');
+        if (Game.state === 'SETTINGS') {
+            UI.elements.settings.classList.remove('hidden');
+            UI.updateFPSButton();
+        }
         if (Game.state === 'PAUSED') UI.elements.pause.classList.remove('hidden');
         if (Game.state === 'UPGRADES') UI.elements.upgrades.classList.remove('hidden');
         if (Game.state === 'RESET_CONFIRM') UI.elements.resetConfirm.classList.remove('hidden');
         if (Game.state === 'LEVELUP') UI.elements.levelUp.classList.remove('hidden');
         if (Game.state === 'ACHIEVEMENTS') UI.elements.achievements.classList.remove('hidden');
         if (Game.state === 'PLAYER_STATS') UI.elements.playerStats.classList.remove('hidden');
-        if (Game.state === 'QUIT_CONFIRM') UI.elements.quitConfirm.classList.remove('hidden'); // Added
+        if (Game.state === 'QUIT_CONFIRM') UI.elements.quitConfirm.classList.remove('hidden');
         
-        // Update stats in pause menu
         if (Game.state === 'PAUSED' && Game.player) {
             UI.updateStatsDisplay();
         }
         
-        // Update dev mode controls
         if (typeof DevMode !== 'undefined') {
             DevMode.createControls();
         }
@@ -312,18 +305,18 @@ const UI = {
         if (!statsDiv) {
             statsDiv = document.createElement('div');
             statsDiv.id = 'pause-stats';
-            statsDiv.style.cssText = 'position: absolute; bottom: 20px; left: 20px; color: white; font-size: 16px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 5px; pointer-events: none; z-index: 30;';
+            statsDiv.style.cssText = 'position: absolute; bottom: 40px; left: 40px; color: white; font-size: 22px; background: rgba(0,0,0,0.8); padding: 25px; border-radius: 10px; pointer-events: none; z-index: 30; min-width: 300px;';
             UI.elements.pause.appendChild(statsDiv);
         }
         
         statsDiv.innerHTML = `
-            <div style="margin-bottom: 5px; color: #00d4ff; font-weight: bold;">PLAYER STATS</div>
-            <div>Level: ${stats.level}</div>
-            <div>HP: ${stats.hp}/${stats.maxHp}</div>
-            <div>Damage: ${stats.damage}</div>
-            <div>Crit Chance: ${stats.critChance}</div>
-            <div>Speed: ${stats.speed}</div>
-            <div>EXP: ${stats.exp}/${stats.expNext}</div>
+            <div style="margin-bottom: 10px; color: #00d4ff; font-weight: bold; font-size: 24px;">PLAYER STATS</div>
+            <div style="margin-bottom: 8px;">Level: <span style="color: #FFD700;">${stats.level}</span></div>
+            <div style="margin-bottom: 8px;">HP: <span style="color: #ff4444;">${stats.hp}</span>/<span style="color: #44ff44;">${stats.maxHp}</span></div>
+            <div style="margin-bottom: 8px;">Damage: <span style="color: #ffaa00;">${stats.damage}</span></div>
+            <div style="margin-bottom: 8px;">Crit Chance: <span style="color: #ff00ff;">${stats.critChance}</span></div>
+            <div style="margin-bottom: 8px;">Speed: <span style="color: #00ffff;">${stats.speed}</span></div>
+            <div style="margin-bottom: 8px;">EXP: <span style="color: #00d4ff;">${stats.exp}</span>/<span style="color: #00d4ff;">${stats.expNext}</span></div>
         `;
     },
 
@@ -342,7 +335,6 @@ const UI = {
         document.getElementById('level-text').innerText = `LV. ${player.level}`;
         document.getElementById('timer-display').innerText = Utils.formatTime(Game.elapsedTime);
         
-        // Update low health border effect
         UI.updateLowHealthEffect();
     },
 
@@ -352,13 +344,10 @@ const UI = {
         const border = UI.elements.lowHealthBorder;
         const hpPercent = Game.player.hp / Game.player.maxHp;
         
-        // Show red border when HP is below 30%
         if (hpPercent <= 0.3 && Game.state === 'PLAYING' && !Game.isPaused) {
-            // Calculate opacity based on how low HP is (more red as HP decreases)
             const opacity = Math.max(0.3, 1 - (hpPercent / 0.3));
             border.style.opacity = opacity.toString();
             
-            // Add pulsing animation when HP is critically low (below 15%)
             if (hpPercent <= 0.15) {
                 border.classList.add('low-health-pulse');
             } else {

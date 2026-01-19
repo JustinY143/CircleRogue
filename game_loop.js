@@ -1,29 +1,38 @@
+let lastUpdateTime = Date.now();
+
 function update() {
-    if (Game.state !== 'PLAYING' || Game.isPaused) return;
-    
-    if (!Game.isTimePaused) {
-        const now = Date.now();
-        const deltaTime = (now - Game.lastUpdateTime) / 1000;
-        Game.elapsedTime += deltaTime;
-        Game.lastUpdateTime = now;
+    if (Game.state !== 'PLAYING' || Game.isPaused) {
+        lastUpdateTime = Date.now(); 
+        return;
     }
+    
+    const currentTime = Date.now();
+    const deltaTime = currentTime - lastUpdateTime;
+    
+    // Get time scale for 60 FPS reference
+    const timeScale = Math.min(deltaTime / 16.67, 2.5); // Cap at 2.5x normal speed
     
     Game.frameCount++;
     const player = Game.player;
     
-    // Player movement
-    player.updateBase(keys);
+    // Update elapsed time based on real delta time
+    if (!Game.isTimePaused) {
+        Game.elapsedTime += deltaTime / 1000; // Convert to seconds
+    }
+    
+    // Player movement with delta time
+    player.updateBase(keys, timeScale);
     
     // Player attacks
     if (mouse.down) {
         const ax = (mouse.x - CANVAS.width/2) / Game.ZOOM_LEVEL;
         const ay = (mouse.y - CANVAS.height/2) / Game.ZOOM_LEVEL;
         
-        if (player instanceof Gunner) player.attack(ax, ay, Game.bullets);
-        else player.attack(ax, ay, Game.slashes, Game.enemies);
+        if (player instanceof Gunner) player.attack(ax, ay, Game.bullets, timeScale);
+        else player.attack(ax, ay, Game.slashes, Game.enemies, timeScale);
     }
 
-    // Enemy spawning
+    // Enemy spawning (now uses real time)
     if (!Game.devMode) {
         let currentSpawnRate = SETTINGS.BASE_SPAWN_RATE;
         if (Game.elapsedTime > SETTINGS.RAMP_SPAWN_TIME) {
@@ -46,26 +55,25 @@ function update() {
             if (enemy) {
                 if (enemy.isBoss) {
                     Game.bossActive = true;
-                    Game.startBossFight(); // Start tracking the boss fight
+                    Game.startBossFight();
                 }
                 Game.enemies.push(enemy);
             }
         }
     }
 
-    // Update all entities
-    Game.bullets.forEach(b => b.update());
-    Game.slashes.forEach(s => s.update(player));
-    Game.particles.forEach(p => p.update(player));
-    Game.enemyProjectiles.forEach(ep => ep.update());
+    // Update all entities with time scaling
+    Game.bullets.forEach(b => b.update(timeScale));
+    Game.slashes.forEach(s => s.update(player, timeScale));
+    Game.particles.forEach(p => p.update(player, timeScale));
+    Game.enemyProjectiles.forEach(ep => ep.update(timeScale));
     Game.enemies.forEach(e => {
-        e.update(player, Game.enemyProjectiles); 
+        e.update(player, Game.enemyProjectiles, timeScale); 
         if (Utils.getDist(e, player) < e.radius + player.radius) {
             if (e.damageCooldown <= 0) {
                 player.takeDamage(e.damage);
                 e.damageCooldown = 60; 
                 
-                // Track if player was hit during boss fight
                 if (Game.bossActive || e.isBoss) {
                     Game.playerHitDuringBossFight();
                 }
@@ -113,7 +121,6 @@ function update() {
                 player.takeDamage(ep.damage);
                 if (!ep.isLaser) ep.dead = true; 
                 
-                // Track if player was hit during boss fight
                 if (Game.bossActive) {
                     Game.playerHitDuringBossFight();
                 }
@@ -128,7 +135,6 @@ function update() {
             Game.particles.push(new Particle(e.x, e.y, e.expValue)); 
             Game.score += SETTINGS.BASE_EXP_PER_KILL; 
             
-            // Record kill for achievements
             if (Game.recordEnemyKill) {
                 Game.recordEnemyKill();
             }
@@ -149,12 +155,14 @@ function update() {
 
     // Update HUD
     UI.updateHUD();
+    
+    // Update last update time for next frame
+    lastUpdateTime = currentTime;
 }
 
 function draw() {
     CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
     
-    // FIX: Added LEVELUP and QUIT_CONFIRM to this check so the background renders
     const renderStates = ['PLAYING', 'PAUSED', 'GAMEOVER', 'LEVELUP', 'QUIT_CONFIRM'];
     
     if (renderStates.includes(Game.state)) {
@@ -165,7 +173,7 @@ function draw() {
         CTX.scale(Game.ZOOM_LEVEL, Game.ZOOM_LEVEL);
         CTX.translate(-player.x, -player.y);
 
-        // Draw grid - Optimized to batch strokes
+        // Draw grid
         CTX.strokeStyle = '#222'; 
         CTX.lineWidth = 2;
         CTX.beginPath();
@@ -193,6 +201,11 @@ function draw() {
         if (Game.state === 'PLAYING' && !Game.isPaused) {
             drawCrosshair(mouse.x, mouse.y, SETTINGS.CROSSHAIR_COLOR);
         }
+        
+        // Draw FPS counter if enabled
+        if (Game.showFPS) {
+            drawFPS();
+        }
     }
 }
 
@@ -219,7 +232,22 @@ function drawCrosshair(x, y, color) {
     });
 }
 
+function drawFPS() {
+    CTX.save();
+    CTX.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    CTX.fillRect(10, 10, 80, 30);
+    CTX.fillStyle = Utils.fps > 30 ? '#00ff00' : (Utils.fps > 15 ? '#ffff00' : '#ff0000');
+    CTX.font = 'bold 16px Arial';
+    CTX.fillText(`FPS: ${Utils.fps}`, 15, 30);
+    CTX.restore();
+}
+
 function gameLoop() { 
+    // Initialize delta time
+    if (Utils.lastTime === 0) {
+        Utils.lastTime = Date.now();
+    }
+    
     update(); 
     draw(); 
     requestAnimationFrame(gameLoop); 
@@ -228,7 +256,8 @@ function gameLoop() {
 function initGame() {
     CANVAS.width = window.innerWidth; 
     CANVAS.height = window.innerHeight;
-    Game.lastUpdateTime = Date.now();
+    lastUpdateTime = Date.now();
+    Utils.lastTime = Date.now(); // Initialize delta time
     UI.init();
     UI.update();
     gameLoop();

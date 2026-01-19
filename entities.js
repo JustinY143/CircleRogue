@@ -33,7 +33,7 @@ class Player {
         return totalDamage * multiplier;
     }
 
-    updateBase(keys) {
+    updateBase(keys, timeScale = 1) {
         let moveX = 0; let moveY = 0;
         if (keys['w']) moveY -= 1;
         if (keys['s']) moveY += 1;
@@ -42,13 +42,13 @@ class Player {
 
         if (moveX !== 0 || moveY !== 0) {
             const length = Math.sqrt(moveX * moveX + moveY * moveY);
-            this.x += (moveX / length) * this.speed;
-            this.y += (moveY / length) * this.speed;
+            this.x += (moveX / length) * this.speed * timeScale;
+            this.y += (moveY / length) * this.speed * timeScale;
         }
         
         Utils.clampToWorld(this);
-        if (this.attackTimer > 0) this.attackTimer--;
-        if (this.iframeTimer > 0) this.iframeTimer--;
+        if (this.attackTimer > 0) this.attackTimer -= timeScale;
+        if (this.iframeTimer > 0) this.iframeTimer -= timeScale;
     }
     
     takeDamage(dmg) { 
@@ -98,7 +98,7 @@ class Gunner extends Player {
     constructor(x, y, upgrades) { 
         super(x, y, '#D8BFD8', upgrades, SETTINGS.GUNNER.hp, SETTINGS.GUNNER.speed); 
     }
-    attack(ax, ay, bullets) {
+    attack(ax, ay, bullets, timeScale = 1) {
         if (this.attackTimer > 0) return;
         const angle = Math.atan2(ay, ax);
         bullets.push(new Bullet(this.x, this.y, angle));
@@ -110,7 +110,7 @@ class Swordsman extends Player {
     constructor(x, y, upgrades) { 
         super(x, y, '#00ff00', upgrades, SETTINGS.SWORDSMAN.hp, SETTINGS.SWORDSMAN.speed); 
     }
-    attack(ax, ay, slashes, enemies) {
+    attack(ax, ay, slashes, enemies, timeScale = 1) {
         if (this.attackTimer > 0) return;
         const angle = Math.atan2(ay, ax);
         slashes.push(new Slash(this.x, this.y, angle));
@@ -139,8 +139,10 @@ class Bullet {
         this.vy = Math.sin(angle) * SETTINGS.BULLET_SPEED;
         this.life = SETTINGS.BULLET_LIFE; this.dead = false;
     }
-    update() {
-        this.x += this.vx; this.y += this.vy; this.life--;
+    update(timeScale = 1) {
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
+        this.life -= timeScale;
         if (this.life <= 0) this.dead = true;
     }
     draw(ctx) {
@@ -156,32 +158,28 @@ class Slash {
         this.trailParticles = [];
     }
     
-    update(player) { 
+    update(player, timeScale = 1) { 
         this.x = player.x; 
         this.y = player.y; 
-        this.life--;
+        this.life -= timeScale;
     }
     
     draw(ctx) {
         const baseOpacity = this.life / SETTINGS.SWORD_DURATION;
         
-        // Draw a low opacity cone shape showing the hitbox
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle - SETTINGS.SWORD_ARC / 2);
         
-        // Create cone gradient
         const gradient = ctx.createRadialGradient(
             0, 0, 10,
             SETTINGS.SWORD_RADIUS * 0.7, SETTINGS.SWORD_RADIUS * 0.3, SETTINGS.SWORD_RADIUS
         );
         
-        // Green energy effect
         gradient.addColorStop(0, `rgba(0, 255, 100, ${baseOpacity * 0.8})`);
         gradient.addColorStop(0.5, `rgba(0, 255, 150, ${baseOpacity * 0.4})`);
         gradient.addColorStop(1, `rgba(0, 255, 100, ${baseOpacity * 0.1})`);
         
-        // Draw the cone (sector of a circle)
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, SETTINGS.SWORD_RADIUS, 0, SETTINGS.SWORD_ARC);
@@ -190,7 +188,6 @@ class Slash {
         ctx.fillStyle = gradient;
         ctx.fill();
         
-        // Draw the outer edge of the cone with a brighter color
         ctx.beginPath();
         ctx.arc(0, 0, SETTINGS.SWORD_RADIUS, 0, SETTINGS.SWORD_ARC);
         ctx.strokeStyle = `rgba(0, 255, 200, ${baseOpacity * 0.6})`;
@@ -207,13 +204,17 @@ class Particle {
         const a = Math.random()*Math.PI*2;
         this.vx = Math.cos(a)*5; this.vy = Math.sin(a)*5;
     }
-    update(player) {
-        this.x += this.vx; this.y += this.vy; this.vx *= 0.9; this.vy *= 0.9;
+    update(player, timeScale = 1) {
+        this.x += this.vx * timeScale; 
+        this.y += this.vy * timeScale; 
+        this.vx *= 0.9; 
+        this.vy *= 0.9;
         const d = Utils.getDist(this, player);
         if(d < 160) { 
             const a = Math.atan2(player.y - this.y, player.x - this.x);
             const s = (160 - d) / 20;
-            this.x += Math.cos(a) * s; this.y += Math.sin(a) * s;
+            this.x += Math.cos(a) * s * timeScale; 
+            this.y += Math.sin(a) * s * timeScale;
         }
         if(d < player.radius + this.radius) { 
             player.gainExp(this.value * 2); 

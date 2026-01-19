@@ -776,14 +776,17 @@
         </div>
         
         <div id="settings-menu" class="screen center-screen hidden">
-            <h1>SETTINGS</h1>
-            <div style="color:white; font-size:24px; margin-bottom: 20px;">
-                Crosshair Color: 
-                <input type="color" id="crosshairColorPicker" value="#ff69b4" onchange="Game.updateCrosshairColor(this.value)">
-            </div>
-            <button class="menu-btn btn-centered" style="width:200px;" onclick="Game.toMainMenu()">BACK</button>
-            <button id="btn-reset" onclick="Game.resetProgress()">RESET DATA</button>
-        </div>
+			<h1>SETTINGS</h1>
+			<div style="color:white; font-size:24px; margin-bottom: 20px;">
+				Crosshair Color: 
+				<input type="color" id="crosshairColorPicker" value="#ff69b4" onchange="Game.updateCrosshairColor(this.value)">
+			</div>
+			<button id="toggle-fps-btn" class="menu-btn btn-centered" style="width:250px; margin-bottom: 20px;" onclick="Game.toggleFPS()">
+				${Game.saveData.showFPS ? 'Hide FPS' : 'Show FPS'}
+			</button>
+			<button class="menu-btn btn-centered" style="width:200px;" onclick="Game.toMainMenu()">BACK</button>
+			<button id="btn-reset" onclick="Game.resetProgress()">RESET DATA</button>
+		</div>
 
         <div id="reset-confirm" class="screen center-screen hidden">
             <h1 style="color: #ff4444;">WARNING!</h1>

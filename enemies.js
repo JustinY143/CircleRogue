@@ -9,19 +9,20 @@ class EnemyProjectile {
             this.radius = 50;
             this.dead = false;
         } else {
-            this.vx = Math.cos(angle) * 4;
-            this.vy = Math.sin(angle) * 4;
+            this.vx = Math.cos(angle) * 10;
+            this.vy = Math.sin(angle) * 10;
             this.damage = damage;
             this.radius = 6;
             this.life = 300; 
             this.dead = false;
         }
     }
-    update() {
+    update(timeScale = 1) {
         if (!this.isLaser) {
-            this.x += this.vx; this.y += this.vy;
+            this.x += this.vx * timeScale; 
+            this.y += this.vy * timeScale;
         }
-        this.life--;
+        this.life -= timeScale;
         if (this.life <= 0) this.dead = true;
     }
     draw(ctx) {
@@ -58,45 +59,45 @@ class Enemy {
         this.aimAngle = 0;
     }
 
-    update(target, projectiles) {
-        if (this.damageCooldown > 0) this.damageCooldown--;
+    update(target, projectiles, timeScale = 1) {
+        if (this.damageCooldown > 0) this.damageCooldown -= timeScale;
         
         if (this.isBoss) {
-            this.updateBoss(target, projectiles);
+            this.updateBoss(target, projectiles, timeScale);
         } else if (this.isArcher) {
-            this.updateArcher(target, projectiles);
+            this.updateArcher(target, projectiles, timeScale);
         } else {
             const angle = Math.atan2(target.y - this.y, target.x - this.x);
-            this.x += Math.cos(angle) * this.speed;
-            this.y += Math.sin(angle) * this.speed;
+            this.x += Math.cos(angle) * this.speed * timeScale;
+            this.y += Math.sin(angle) * this.speed * timeScale;
         }
     }
 
-    updateArcher(target, projectiles) {
+    updateArcher(target, projectiles, timeScale = 1) {
         const dist = Utils.getDist(this, target);
         if (dist < 400) {
-            this.timer++;
-            if (this.timer > 90) {
+            this.timer += timeScale;
+            if (this.timer > 45) {
                 const angle = Math.atan2(target.y - this.y, target.x - this.x);
                 projectiles.push(new EnemyProjectile(this.x, this.y, angle, this.damage));
                 this.timer = 0;
             }
         } else {
             const angle = Math.atan2(target.y - this.y, target.x - this.x);
-            this.x += Math.cos(angle) * this.speed;
-            this.y += Math.sin(angle) * this.speed;
+            this.x += Math.cos(angle) * this.speed * timeScale;
+            this.y += Math.sin(angle) * this.speed * timeScale;
         }
     }
 
-    updateBoss(target, projectiles) {
+    updateBoss(target, projectiles, timeScale = 1) {
         const angle = Math.atan2(target.y - this.y, target.x - this.x);
-        this.x += Math.cos(angle) * this.speed;
-        this.y += Math.sin(angle) * this.speed;
+        this.x += Math.cos(angle) * this.speed * timeScale;
+        this.y += Math.sin(angle) * this.speed * timeScale;
 
         if (this.bossState === 0) {
             this.speed = this.baseSpeed;
-            this.timer++;
-            if (this.timer > 400) {	//cooldown
+            this.timer += timeScale;
+            if (this.timer > 120) {
                 this.bossState = 1;
                 this.timer = 0;
             }
@@ -108,8 +109,8 @@ class Enemy {
                 this.aimAngle = Math.atan2(target.y - this.y, target.x - this.x);
             }
             
-            this.timer++;
-            if (this.timer > 110) {		//time to shoot
+            this.timer += timeScale;
+            if (this.timer > 20) {
                 this.bossState = 2;
                 this.timer = 0;
                 projectiles.push(new EnemyProjectile(this.x, this.y, this.aimAngle, this.damage * 2, true));
@@ -117,7 +118,7 @@ class Enemy {
         }
         else if (this.bossState === 2) {
             this.speed = this.baseSpeed * 0.4;
-            this.timer++;
+            this.timer += timeScale;
             if (this.timer > 30) {
                 this.bossState = 0;
                 this.timer = 0;
@@ -178,11 +179,11 @@ class Enemy {
 const Spawner = {
     bossSpawned: false,
     types: {
-        BASIC:  { color: 'red', hp: 8, speed: 1.3, damage: 2, exp: 10, radius: 15 },
-        FAST:   { color: '#FFD700', hp: 5, speed: 2.2, damage: 2, exp: 15, radius: 13 },
-        TANK:   { color: '#8B0000', hp: 40, speed: 1.0, damage: 5, exp: 50, radius: 35 },
-        ARCHER: { color: '#006400', hp: 15, speed: 0.7, damage: 10, exp: 30, radius: 18, isArcher: true },
-        BOSS:   { color: '#4B0082', hp: 2000, speed: 1.0, damage: 20, exp: 300, radius: 80, isBoss: true }
+        BASIC:  { color: 'red', hp: 8, speed: 4.0, damage: 2, exp: 10, radius: 15 },
+        FAST:   { color: '#FFD700', hp: 5, speed: 8.2, damage: 2, exp: 15, radius: 13 },
+        TANK:   { color: '#8B0000', hp: 40, speed: 2.5, damage: 5, exp: 50, radius: 35 },
+        ARCHER: { color: '#006400', hp: 15, speed: 2.0, damage: 10, exp: 30, radius: 18, isArcher: true },
+        BOSS:   { color: '#4B0082', hp: 2000, speed: 2.5, damage: 20, exp: 300, radius: 80, isBoss: true }
     },
     spawn: (x, y, time, diffName) => {
         const mult = DIFFICULTY_MODS[diffName];

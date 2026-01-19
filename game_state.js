@@ -6,6 +6,7 @@ const Game = {
     frameCount: 0, score: 0, startTime: 0, elapsedTime: 0, lastUpdateTime: 0,
     bossActive: false,
     devMode: false,
+    showFPS: false,
     
     // Track kills for achievements
     currentRunKills: 0,
@@ -20,6 +21,7 @@ const Game = {
         upgrades: { hp: 0, dmg: 0, crit: 0 },
         unlockedHardBoss: false,
         pendingUnlockNotification: false,
+        showFPS: false,
         achievements: {
             unlocked: {},
             bossKillsByDiff: {},
@@ -29,8 +31,8 @@ const Game = {
             maxPointsInRun: 0,
             maxSurvivalTime: 0,
             deathCount: 0,
-            totalPlayTime: 0, // Added for playtime tracking
-            noHitBossKills: 0 // Added for no-hit achievements
+            totalPlayTime: 0,
+            noHitBossKills: 0
         }
     },
     currentDifficulty: 'NOVICE',
@@ -49,33 +51,28 @@ const Game = {
         Game.isTimePaused = true;
         Game.state = 'LEVELUP';
         
-        // Generate and display random upgrade options
         UI.populateLevelUpCards();
         UI.update();
     },
 
     applyInGameUpgrade: function(id) {
-		if (id === 'hp') {
-			Game.player.maxHp += Utils.getUpgradeAmount('hp');
-			Game.player.hp += Utils.getUpgradeAmount('hp');
-		} else if (id === 'dmg') {
-			Game.player.stats.dmg += Utils.getUpgradeAmount('dmg');
-		} else if (id === 'crit') {
-			Game.player.stats.critChance += Utils.getUpgradeAmount('crit');
-		} else if (id === 'heal') {
-			const healAmount = Math.floor(Game.player.maxHp * SETTINGS.UPGRADE_SYSTEM.HEAL_UPGRADE_PERCENT);
-			Game.player.heal(healAmount);
-		}
-		Game.uiElements.levelUp.classList.add('hidden');
-		Game.isPaused = false;
-		Game.isTimePaused = false;
-		
-		// FIX: Update lastUpdateTime to prevent time jump
-		Game.lastUpdateTime = Date.now();
-		
-		Game.state = 'PLAYING';
-		UI.update();
-	},
+        if (id === 'hp') {
+            Game.player.maxHp += Utils.getUpgradeAmount('hp');
+            Game.player.hp += Utils.getUpgradeAmount('hp');
+        } else if (id === 'dmg') {
+            Game.player.stats.dmg += Utils.getUpgradeAmount('dmg');
+        } else if (id === 'crit') {
+            Game.player.stats.critChance += Utils.getUpgradeAmount('crit');
+        } else if (id === 'heal') {
+            const healAmount = Math.floor(Game.player.maxHp * SETTINGS.UPGRADE_SYSTEM.HEAL_UPGRADE_PERCENT);
+            Game.player.heal(healAmount);
+        }
+        Game.uiElements.levelUp.classList.add('hidden');
+        Game.isPaused = false;
+        Game.isTimePaused = false;
+        Game.state = 'PLAYING';
+        UI.update();
+    },
 
     load: function() {
         const data = localStorage.getItem('ClusterBusterSave');
@@ -83,7 +80,9 @@ const Game = {
             const parsed = JSON.parse(data);
             Game.saveData = parsed;
             
-            // Initialize achievements if they don't exist
+            // Load FPS setting
+            Game.showFPS = Game.saveData.showFPS || false;
+            
             if (!Game.saveData.achievements) {
                 Game.saveData.achievements = {
                     unlocked: {},
@@ -100,7 +99,6 @@ const Game = {
             }
         }
         
-        // Immediately show ??? button if unlocked
         if (Game.saveData.unlockedHardBoss) {
             document.getElementById('btn-diff-unknown').classList.remove('hidden');
         }
@@ -154,7 +152,6 @@ const Game = {
             Game.save();
             UI.updateUpgradeUI();
             
-            // Check upgrade achievements
             if (Achievements) {
                 Achievements.checkAllAchievements();
             }
@@ -189,6 +186,13 @@ const Game = {
         SETTINGS.CROSSHAIR_COLOR = color; 
     },
     
+    toggleFPS: function() {
+        Game.showFPS = !Game.showFPS;
+        Game.saveData.showFPS = Game.showFPS;
+        Game.save();
+        UI.updateFPSButton();
+    },
+    
     toCharSelect: function() { 
         Game.state = 'SELECT'; 
         UI.update(); 
@@ -199,13 +203,11 @@ const Game = {
         Game.isPaused = false;
         Game.isTimePaused = false;
         
-        // Add playtime from this session
         if (Game.saveData.achievements) {
             Game.saveData.achievements.totalPlayTime += Game.elapsedTime || 0;
             Game.save();
         }
         
-        // Show pending unlock notification if there is one
         if (Game.saveData.pendingUnlockNotification) {
             UI.showUnlockNotification();
             Game.saveData.pendingUnlockNotification = false;
@@ -216,34 +218,32 @@ const Game = {
     },
     
     togglePause: function() {
-		if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED' && Game.state !== 'QUIT_CONFIRM') return;
-		
-		// If in quit confirmation, close it instead of toggling pause
-		if (Game.state === 'QUIT_CONFIRM') {
-			Game.state = 'PAUSED';
-			Game.isPaused = true;
-			Game.isTimePaused = true;
-		} else {
-			Game.isPaused = !Game.isPaused;
-			Game.isTimePaused = Game.isPaused;
-			Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
-			
-			// FIX: Update lastUpdateTime when unpausing to prevent time jump
-			if (!Game.isPaused) {
-				Game.lastUpdateTime = Date.now();
-			}
-		}
-		
-		UI.update();
-	},
+        if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED' && Game.state !== 'QUIT_CONFIRM') return;
+        
+        if (Game.state === 'QUIT_CONFIRM') {
+            Game.state = 'PAUSED';
+            Game.isPaused = true;
+            Game.isTimePaused = true;
+        } else {
+            Game.isPaused = !Game.isPaused;
+            Game.isTimePaused = Game.isPaused;
+            Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
+        }
+        
+        UI.update();
+    },
 
     start: function(classType) {
         Game.bullets = []; Game.enemies = []; Game.particles = []; Game.slashes = []; Game.enemyProjectiles = [];
         Game.score = 0; Game.startTime = Date.now(); Game.elapsedTime = 0; 
         Game.isPaused = false; Game.isTimePaused = false;
-        Game.lastUpdateTime = Date.now();
+        Game.frameCount = 0;
         
-        // Reset run stats
+        // Reset delta time tracking
+        Utils.lastTime = Date.now();
+        Utils.frameCount = 0;
+        Utils.fpsTime = 0;
+        
         Game.currentRunKills = 0;
         Game.bossHitDuringFight = false;
         Game.bossFightStarted = false;
@@ -266,18 +266,14 @@ const Game = {
         let diffMult = DIFFICULTY_MODS[Game.currentDifficulty].score;
         let pointsEarned = Math.floor((Game.score + Game.elapsedTime) * diffMult);
         
-        // Calculate kills (each enemy gives 5 score points)
         const kills = Game.score / 5;
         
-        // Update save data
         Game.saveData.points += pointsEarned;
         
-        // Add playtime
         if (Game.saveData.achievements) {
             Game.saveData.achievements.totalPlayTime += Game.elapsedTime;
         }
         
-        // Record achievements
         if (Achievements && Achievements.recordRunStats) {
             Achievements.recordRunStats(kills, pointsEarned, Game.elapsedTime);
         }
@@ -292,7 +288,6 @@ const Game = {
         Game.bossActive = false;
         Game.bossFightStarted = false;
         
-        // Check for no-hit achievement
         if (!Game.bossHitDuringFight) {
             if (Game.saveData.achievements) {
                 Game.saveData.achievements.noHitBossKills = (Game.saveData.achievements.noHitBossKills || 0) + 1;
@@ -302,25 +297,19 @@ const Game = {
             }
         }
         
-        // Set a flag instead of showing alert immediately
         if (Game.currentDifficulty === 'HARD' && !Game.saveData.unlockedHardBoss) {
             Game.saveData.unlockedHardBoss = true;
             Game.saveData.pendingUnlockNotification = true;
             
-            // Immediately update the UI to show the ??? button
             document.getElementById('btn-diff-unknown').classList.remove('hidden');
             Game.save();
-            
-            // Don't show alert here - it will be shown when returning to main menu
         }
         
-        // Record boss kill for achievements
         if (Achievements && Achievements.recordBossKill) {
             Achievements.recordBossKill(Game.currentDifficulty);
         }
     },
 
-    // Helper function to track enemy kills
     recordEnemyKill: function() {
         Game.currentRunKills++;
         if (Game.saveData.achievements) {
@@ -331,20 +320,17 @@ const Game = {
         }
     },
     
-    // Track boss fight hits
     playerHitDuringBossFight: function() {
         if (Game.bossActive) {
             Game.bossHitDuringFight = true;
         }
     },
     
-    // Start tracking boss fight
     startBossFight: function() {
         Game.bossFightStarted = true;
         Game.bossHitDuringFight = false;
     },
 
-    // Quit confirmation functions
     showQuitConfirm: function() {
         Game.state = 'QUIT_CONFIRM';
         UI.update();
