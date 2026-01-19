@@ -9,6 +9,9 @@ const Game = {
     
     // Track kills for achievements
     currentRunKills: 0,
+    // Track no-hit boss attempt
+    bossHitDuringFight: false,
+    bossFightStarted: false,
     
     ZOOM_LEVEL: 1.15,
 
@@ -25,7 +28,9 @@ const Game = {
             totalPointsEarned: 0,
             maxPointsInRun: 0,
             maxSurvivalTime: 0,
-            deathCount: 0
+            deathCount: 0,
+            totalPlayTime: 0, // Added for playtime tracking
+            noHitBossKills: 0 // Added for no-hit achievements
         }
     },
     currentDifficulty: 'NOVICE',
@@ -69,7 +74,7 @@ const Game = {
     },
 
     load: function() {
-        const data = localStorage.getItem('ClusterFuckSave');
+        const data = localStorage.getItem('ClusterBusterSave');
         if (data) {
             const parsed = JSON.parse(data);
             Game.saveData = parsed;
@@ -84,7 +89,9 @@ const Game = {
                     totalPointsEarned: Game.saveData.points || 0,
                     maxPointsInRun: 0,
                     maxSurvivalTime: 0,
-                    deathCount: 0
+                    deathCount: 0,
+                    totalPlayTime: 0,
+                    noHitBossKills: 0
                 };
             }
         }
@@ -96,7 +103,7 @@ const Game = {
     },
     
     save: function() {
-        localStorage.setItem('ClusterFuckSave', JSON.stringify(Game.saveData));
+        localStorage.setItem('ClusterBusterSave', JSON.stringify(Game.saveData));
     },
     
     resetProgress: function() {
@@ -104,7 +111,7 @@ const Game = {
     },
     
     confirmReset: function() {
-        localStorage.removeItem('ClusterFuckSave');
+        localStorage.removeItem('ClusterBusterSave');
         location.reload();
     },
     
@@ -124,6 +131,12 @@ const Game = {
         UI.populateAchievements();
         UI.update();
     },
+
+    toPlayerStats: function() {
+        Game.state = 'PLAYER_STATS';
+        UI.populatePlayerStats();
+        UI.update();
+    },
     
     buyUpgrade: function(type) {
         const currentLevel = Game.saveData.upgrades[type];
@@ -136,6 +149,11 @@ const Game = {
             Game.saveData.upgrades[type]++;
             Game.save();
             UI.updateUpgradeUI();
+            
+            // Check upgrade achievements
+            if (Achievements) {
+                Achievements.checkAllAchievements();
+            }
         } else {
             const btn = event.target;
             const originalText = btn.textContent;
@@ -177,6 +195,12 @@ const Game = {
         Game.isPaused = false;
         Game.isTimePaused = false;
         
+        // Add playtime from this session
+        if (Game.saveData.achievements) {
+            Game.saveData.achievements.totalPlayTime += Game.elapsedTime || 0;
+            Game.save();
+        }
+        
         // Show pending unlock notification if there is one
         if (Game.saveData.pendingUnlockNotification) {
             UI.showUnlockNotification();
@@ -188,10 +212,18 @@ const Game = {
     },
     
     togglePause: function() {
-        if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED') return;
-        Game.isPaused = !Game.isPaused;
-        Game.isTimePaused = Game.isPaused;
-        Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
+        if (Game.state !== 'PLAYING' && Game.state !== 'PAUSED' && Game.state !== 'QUIT_CONFIRM') return;
+        
+        // If in quit confirmation, close it instead of toggling pause
+        if (Game.state === 'QUIT_CONFIRM') {
+            Game.state = 'PAUSED';
+            Game.isPaused = true;
+            Game.isTimePaused = true;
+        } else {
+            Game.isPaused = !Game.isPaused;
+            Game.isTimePaused = Game.isPaused;
+            Game.state = Game.isPaused ? 'PAUSED' : 'PLAYING';
+        }
         
         UI.update();
     },
@@ -204,6 +236,8 @@ const Game = {
         
         // Reset run stats
         Game.currentRunKills = 0;
+        Game.bossHitDuringFight = false;
+        Game.bossFightStarted = false;
         
         Spawner.bossSpawned = false; 
         Game.bossActive = false;
@@ -229,6 +263,11 @@ const Game = {
         // Update save data
         Game.saveData.points += pointsEarned;
         
+        // Add playtime
+        if (Game.saveData.achievements) {
+            Game.saveData.achievements.totalPlayTime += Game.elapsedTime;
+        }
+        
         // Record achievements
         if (Achievements && Achievements.recordRunStats) {
             Achievements.recordRunStats(kills, pointsEarned, Game.elapsedTime);
@@ -242,6 +281,17 @@ const Game = {
 
     bossKilled: function() {
         Game.bossActive = false;
+        Game.bossFightStarted = false;
+        
+        // Check for no-hit achievement
+        if (!Game.bossHitDuringFight) {
+            if (Game.saveData.achievements) {
+                Game.saveData.achievements.noHitBossKills = (Game.saveData.achievements.noHitBossKills || 0) + 1;
+            }
+            if (Achievements) {
+                Achievements.checkAllAchievements();
+            }
+        }
         
         // Set a flag instead of showing alert immediately
         if (Game.currentDifficulty === 'HARD' && !Game.saveData.unlockedHardBoss) {
@@ -270,5 +320,33 @@ const Game = {
                 Game.saveData.achievements.maxKillsInRun = Game.currentRunKills;
             }
         }
+    },
+    
+    // Track boss fight hits
+    playerHitDuringBossFight: function() {
+        if (Game.bossActive) {
+            Game.bossHitDuringFight = true;
+        }
+    },
+    
+    // Start tracking boss fight
+    startBossFight: function() {
+        Game.bossFightStarted = true;
+        Game.bossHitDuringFight = false;
+    },
+
+    // Quit confirmation functions
+    showQuitConfirm: function() {
+        Game.state = 'QUIT_CONFIRM';
+        UI.update();
+    },
+
+    confirmQuit: function() {
+        Game.toMainMenu();
+    },
+
+    cancelQuit: function() {
+        Game.state = 'PAUSED';
+        UI.update();
     }
 };

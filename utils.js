@@ -7,8 +7,8 @@ const WORLD_HEIGHT = 5000;
 const DIFFICULTY_MODS = {
     BEGINNER: { hp: 0.7, dmg: 0.7, score: 0.5 },
     NOVICE:   { hp: 1.0, dmg: 1.0, score: 1.0 },
-    HARD:     { hp: 2.0, dmg: 2.0, score: 2.0 },
-    UNKNOWN:  { hp: 4.0, dmg: 4.0, score: 4.0 }
+    HARD:     { hp: 1.5, dmg: 1.5, score: 2.0 },
+    UNKNOWN:  { hp: 3.0, dmg: 3.0, score: 4.0 }
 };
 
 const PLAYER_STATS = {
@@ -92,8 +92,13 @@ const Utils = {
     },
     
     formatTime: (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
+		const hours = Math.floor(seconds / 3600);
+		const mins = Math.floor((seconds % 3600) / 60);
+		const secs = Math.floor(seconds % 60);
+		
+		if (hours > 0) {
+			return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+		}
+		return `${mins}:${secs.toString().padStart(2, '0')}`;
+	}
 };

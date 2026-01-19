@@ -6,7 +6,7 @@ const Achievements = {
             id: 'boss_beginner',
             name: 'Baby Steps',
             description: 'Defeat the boss in BEGINNER difficulty',
-            icon: 'B',  // Changed from 👶
+            icon: 'B',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.bossKillsByDiff?.BEGINNER >= 1;
@@ -16,7 +16,7 @@ const Achievements = {
             id: 'boss_novice',
             name: 'Getting Serious',
             description: 'Defeat the boss in NOVICE difficulty',
-            icon: 'S',  // Changed from 🎯
+            icon: 'S',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.bossKillsByDiff?.NOVICE >= 1;
@@ -26,7 +26,7 @@ const Achievements = {
             id: 'boss_hard',
             name: 'Veteran',
             description: 'Defeat the boss in HARD difficulty',
-            icon: 'V',  // Changed from 💪
+            icon: 'V',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.bossKillsByDiff?.HARD >= 1;
@@ -36,7 +36,7 @@ const Achievements = {
             id: 'boss_unknown',
             name: 'The Unknowable',
             description: 'Defeat the boss in ??? difficulty',
-            icon: '?',  // Changed from ❓
+            icon: '?',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.bossKillsByDiff?.UNKNOWN >= 1;
@@ -46,7 +46,7 @@ const Achievements = {
             id: 'boss_all',
             name: 'Master of All',
             description: 'Defeat the boss in ALL difficulties',
-            icon: 'M',  // Changed from 👑
+            icon: 'M',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 const kills = data.bossKillsByDiff || {};
@@ -55,12 +55,34 @@ const Achievements = {
             }
         },
         
+        // No-hit boss achievements
+        {
+            id: 'nohit_boss_1',
+            name: 'Untouchable',
+            description: 'Defeat a boss without getting hit',
+            icon: 'N',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.noHitBossKills >= 1;
+            }
+        },
+        {
+            id: 'nohit_boss_2',
+            name: 'Not a Fluke',
+            description: 'Defeat 2 bosses without getting hit',
+            icon: 'N',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.noHitBossKills >= 5;
+            }
+        },
+        
         // Kill-based achievements
         {
             id: 'kills_100',
             name: 'Initiate Slayer',
             description: 'Kill 100 enemies in one run',
-            icon: 'K',  // Changed from ⚔️
+            icon: 'K',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxKillsInRun >= 100;
@@ -70,7 +92,7 @@ const Achievements = {
             id: 'kills_500',
             name: 'Seasoned Hunter',
             description: 'Kill 500 enemies in one run',
-            icon: 'H',  // Changed from 🏹
+            icon: 'H',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxKillsInRun >= 500;
@@ -80,7 +102,7 @@ const Achievements = {
             id: 'kills_1000',
             name: 'Walking Apocalypse',
             description: 'Kill 1000 enemies in one run',
-            icon: 'A',  // Changed from ☠️
+            icon: 'A',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxKillsInRun >= 1000;
@@ -90,7 +112,7 @@ const Achievements = {
             id: 'total_kills_5000',
             name: 'Genocide',
             description: 'Kill 5000 enemies total',
-            icon: 'G',  // Changed from 💀
+            icon: 'G',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.totalKills >= 5000;
@@ -102,7 +124,7 @@ const Achievements = {
             id: 'points_5000',
             name: 'Rich',
             description: 'Earn 5000 points in one run',
-            icon: 'R',  // Changed from 💰
+            icon: 'R',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxPointsInRun >= 5000;
@@ -112,7 +134,7 @@ const Achievements = {
             id: 'points_10000',
             name: 'Loaded',
             description: 'Earn 10000 points in one run',
-            icon: 'L',  // Changed from 💎
+            icon: 'L',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxPointsInRun >= 10000;
@@ -122,7 +144,7 @@ const Achievements = {
             id: 'points_25000',
             name: 'Richer Than God',
             description: 'Earn 25000 points in one run',
-            icon: 'G',  // Changed from 👑 (using G for God)
+            icon: 'G',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxPointsInRun >= 25000;
@@ -132,7 +154,7 @@ const Achievements = {
             id: 'total_points_50000',
             name: 'Point Hoarder',
             description: 'Accumulate 50000 points total',
-            icon: 'P',  // Changed from 🏦
+            icon: 'P',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.totalPointsEarned >= 50000;
@@ -144,7 +166,7 @@ const Achievements = {
             id: 'time_5',
             name: 'Survivor',
             description: 'Survive 5 minutes in one run',
-            icon: 'T',  // Changed from ⏱️
+            icon: 'T',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxSurvivalTime >= 300;
@@ -154,7 +176,7 @@ const Achievements = {
             id: 'time_10',
             name: 'Endurance',
             description: 'Survive 10 minutes in one run',
-            icon: 'E',  // Changed from 🛡️
+            icon: 'E',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxSurvivalTime >= 600;
@@ -164,31 +186,93 @@ const Achievements = {
             id: 'time_15',
             name: 'Unstoppable',
             description: 'Survive 15 minutes in one run',
-            icon: 'U',  // Changed from ⚡
+            icon: 'U',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.maxSurvivalTime >= 900;
             }
         },
         
-        // Upgrade achievements
+        // Playtime achievements
         {
-            id: 'max_upgrades',
-            name: 'Perfection',
-            description: 'Max out all upgrades',
-            icon: '★',  // Changed from ⭐ (using star symbol)
+            id: 'playtime_1',
+            name: 'Dedicated',
+            description: 'Play for 1 hour total',
+            icon: 'D',
             check: () => {
-                const upgrades = Game.saveData.upgrades || {};
-                return upgrades.hp >= 10 && upgrades.dmg >= 10 && upgrades.crit >= 10;
+                const data = Game.saveData.achievements || {};
+                return data.totalPlayTime >= 3600; // 1 hour in seconds
             }
         },
+        {
+            id: 'playtime_5',
+            name: 'Hardcore',
+            description: 'Play for 5 hours total',
+            icon: 'H',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.totalPlayTime >= 18000; // 5 hours in seconds
+            }
+        },
+        {
+            id: 'playtime_10',
+            name: 'Addicted',
+            description: 'Play for 10 hours total',
+            icon: 'A',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.totalPlayTime >= 36000; // 10 hours in seconds
+            }
+        },
+        {
+            id: 'playtime_25',
+            name: 'No Life',
+            description: 'Play for 25 hours total',
+            icon: 'N',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.totalPlayTime >= 90000; // 25 hours in seconds
+            }
+        },
+        
+        // Upgrade achievements (tiered)
+        {
+			id: 'upgrades_10_each',
+			name: 'Balanced',
+			description: 'Reach level 10 in all upgrades',
+			icon: 'B',
+			check: () => {
+				const upgrades = Game.saveData.upgrades || {};
+				return upgrades.hp >= 10 && upgrades.dmg >= 10 && upgrades.crit >= 10;
+			}
+		},
+		{
+			id: 'upgrades_20_each',
+			name: 'Maxed Out',
+			description: 'Reach level 20 in all upgrades',
+			icon: 'M',
+			check: () => {
+				const upgrades = Game.saveData.upgrades || {};
+				return upgrades.hp >= 20 && upgrades.dmg >= 20 && upgrades.crit >= 20;
+			}
+		},
+		{
+			id: 'upgrades_30_each',
+			name: 'Perfection',
+			description: 'Reach level 30 in all upgrades',
+			icon: 'P',
+			check: () => {
+				const upgrades = Game.saveData.upgrades || {};
+				return upgrades.hp >= 30 && upgrades.dmg >= 30 && upgrades.crit >= 30;
+			}
+		},
         
         // Special achievements
         {
             id: 'first_death',
             name: 'First Blood',
             description: 'Die for the first time',
-            icon: 'D',  // Changed from 💔
+            icon: 'F',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.deathCount >= 1;
@@ -198,10 +282,20 @@ const Achievements = {
             id: 'death_10',
             name: 'Persistent',
             description: 'Die 10 times',
-            icon: 'X',  // Changed from 🔄
+            icon: 'X',
             check: () => {
                 const data = Game.saveData.achievements || {};
                 return data.deathCount >= 10;
+            }
+        },
+        {
+            id: 'death_50',
+            name: 'Unbreakable',
+            description: 'Die 50 times',
+            icon: 'U',
+            check: () => {
+                const data = Game.saveData.achievements || {};
+                return data.deathCount >= 50;
             }
         }
     ],
@@ -276,7 +370,9 @@ const Achievements = {
                 totalPointsEarned: Game.saveData.points || 0,
                 maxPointsInRun: 0,
                 maxSurvivalTime: 0,
-                deathCount: 0
+                deathCount: 0,
+                totalPlayTime: 0,
+                noHitBossKills: 0
             };
         }
         
@@ -311,7 +407,9 @@ const Achievements = {
                 totalPointsEarned: 0,
                 maxPointsInRun: 0,
                 maxSurvivalTime: 0,
-                deathCount: 0
+                deathCount: 0,
+                totalPlayTime: 0,
+                noHitBossKills: 0
             };
         }
         

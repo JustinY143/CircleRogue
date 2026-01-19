@@ -44,7 +44,10 @@ function update() {
 
             const enemy = Spawner.spawn(sx, sy, Game.elapsedTime, Game.currentDifficulty);
             if (enemy) {
-                if (enemy.isBoss) Game.bossActive = true;
+                if (enemy.isBoss) {
+                    Game.bossActive = true;
+                    Game.startBossFight(); // Start tracking the boss fight
+                }
                 Game.enemies.push(enemy);
             }
         }
@@ -61,6 +64,11 @@ function update() {
             if (e.damageCooldown <= 0) {
                 player.takeDamage(e.damage);
                 e.damageCooldown = 60; 
+                
+                // Track if player was hit during boss fight
+                if (Game.bossActive || e.isBoss) {
+                    Game.playerHitDuringBossFight();
+                }
             }
         }
     });
@@ -104,25 +112,30 @@ function update() {
             if (hit) {
                 player.takeDamage(ep.damage);
                 if (!ep.isLaser) ep.dead = true; 
+                
+                // Track if player was hit during boss fight
+                if (Game.bossActive) {
+                    Game.playerHitDuringBossFight();
+                }
             }
         }
     });
 
     // Handle enemy deaths
     Game.enemies.forEach(e => { 
-		if (e.dead && !e.scoreCounted) {
-			if (e.isBoss) Game.bossKilled();
-			Game.particles.push(new Particle(e.x, e.y, e.expValue)); 
-			Game.score += SETTINGS.BASE_EXP_PER_KILL; 
-			
-			// Record kill for achievements
-			if (Game.recordEnemyKill) {
-				Game.recordEnemyKill();
-			}
-			
-			e.scoreCounted = true;
-		} 
-	});
+        if (e.dead && !e.scoreCounted) {
+            if (e.isBoss) Game.bossKilled();
+            Game.particles.push(new Particle(e.x, e.y, e.expValue)); 
+            Game.score += SETTINGS.BASE_EXP_PER_KILL; 
+            
+            // Record kill for achievements
+            if (Game.recordEnemyKill) {
+                Game.recordEnemyKill();
+            }
+            
+            e.scoreCounted = true;
+        } 
+    });
 
     // Check player death
     if (player.dead) Game.die();

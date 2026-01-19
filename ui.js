@@ -4,21 +4,23 @@ const UI = {
     init: function() {
         // Cache UI elements
         UI.elements = {
-			menu: document.getElementById('main-menu'),
-			select: document.getElementById('char-select'),
-			hud: document.getElementById('hud'),
-			death: document.getElementById('game-over'),
-			settings: document.getElementById('settings-menu'),
-			upgrades: document.getElementById('upgrades-menu'),
-			pause: document.getElementById('pause-menu'),
-			expHeader: document.getElementById('exp-header'),
-			levelText: document.getElementById('level-text'),
-			timer: document.getElementById('timer-display'),
-			levelUp: document.getElementById('levelup-menu'),
-			resetConfirm: document.getElementById('reset-confirm'),
-			lowHealthBorder: document.getElementById('low-health-border'),
-			achievements: document.getElementById('achievements-menu'),
-			unlockNotification: null
+            menu: document.getElementById('main-menu'),
+            select: document.getElementById('char-select'),
+            hud: document.getElementById('hud'),
+            death: document.getElementById('game-over'),
+            settings: document.getElementById('settings-menu'),
+            upgrades: document.getElementById('upgrades-menu'),
+            pause: document.getElementById('pause-menu'),
+            expHeader: document.getElementById('exp-header'),
+            levelText: document.getElementById('level-text'),
+            timer: document.getElementById('timer-display'),
+            levelUp: document.getElementById('levelup-menu'),
+            resetConfirm: document.getElementById('reset-confirm'),
+            lowHealthBorder: document.getElementById('low-health-border'),
+            achievements: document.getElementById('achievements-menu'),
+            playerStats: document.getElementById('player-stats-menu'),
+            unlockNotification: null,
+            quitConfirm: document.getElementById('quit-confirm') // Added
         };
         
         Game.uiElements = UI.elements;
@@ -70,38 +72,109 @@ const UI = {
             UI.elements.unlockNotification.style.display = 'block';
         }
     },
-	
-	populateAchievements: function() {
-		const container = document.getElementById('achievements-container');
-		container.innerHTML = '';
-		
-		if (!Achievements || !Achievements.list) return;
-		
-		const achievements = Achievements.list;
-		let unlockedCount = 0;
-		
-		achievements.forEach(achievement => {
-			const isUnlocked = achievement.check();
-			if (isUnlocked) unlockedCount++;
-			
-			const card = document.createElement('div');
-			card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
-			card.innerHTML = `
-				<div class="achievement-icon">${achievement.icon}</div>
-				<div class="achievement-title">${achievement.name}</div>
-				<div class="achievement-desc">${achievement.description}</div>
-				<div class="achievement-status ${isUnlocked ? 'unlocked' : ''}">
-					${isUnlocked ? 'UNLOCKED' : 'LOCKED'}
-				</div>
-			`;
-			container.appendChild(card);
-		});
-		
-		// Update counters
-		document.getElementById('unlocked-count').textContent = unlockedCount;
-		document.getElementById('total-count').textContent = achievements.length;
-	},
-	
+    
+    populatePlayerStats: function() {
+        const container = document.getElementById('stats-content');
+        if (!container) return;
+        
+        const stats = Game.saveData.achievements || {};
+        const upgrades = Game.saveData.upgrades || {};
+        
+        // Calculate total upgrades
+        const totalUpgrades = (upgrades.hp || 0) + (upgrades.dmg || 0) + (upgrades.crit || 0);
+        
+        // Calculate playtime in hours
+        const playTimeHours = (stats.totalPlayTime || 0) / 3600;
+        
+        container.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Play Time</div>
+                    <div class="stat-value">${playTimeHours.toFixed(1)} hours</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Kills</div>
+                    <div class="stat-value">${stats.totalKills || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Points</div>
+                    <div class="stat-value">${Game.saveData.points || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Deaths</div>
+                    <div class="stat-value">${stats.deathCount || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Upgrades</div>
+                    <div class="stat-value">${totalUpgrades}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">No-Hit Boss Kills</div>
+                    <div class="stat-value">${stats.noHitBossKills || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Survival Time</div>
+                    <div class="stat-value">${Utils.formatTime(stats.maxSurvivalTime || 0)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Kills in Run</div>
+                    <div class="stat-value">${stats.maxKillsInRun || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Points in Run</div>
+                    <div class="stat-value">${stats.maxPointsInRun || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Boss Kills (Beginner)</div>
+                    <div class="stat-value">${(stats.bossKillsByDiff && stats.bossKillsByDiff.BEGINNER) || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Boss Kills (Novice)</div>
+                    <div class="stat-value">${(stats.bossKillsByDiff && stats.bossKillsByDiff.NOVICE) || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Boss Kills (Hard)</div>
+                    <div class="stat-value">${(stats.bossKillsByDiff && stats.bossKillsByDiff.HARD) || 0}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Boss Kills (???)</div>
+                    <div class="stat-value">${(stats.bossKillsByDiff && stats.bossKillsByDiff.UNKNOWN) || 0}</div>
+                </div>
+            </div>
+        `;
+    },
+    
+    populateAchievements: function() {
+        const container = document.getElementById('achievements-container');
+        container.innerHTML = '';
+        
+        if (!Achievements || !Achievements.list) return;
+        
+        const achievements = Achievements.list;
+        let unlockedCount = 0;
+        
+        achievements.forEach(achievement => {
+            const isUnlocked = achievement.check();
+            if (isUnlocked) unlockedCount++;
+            
+            const card = document.createElement('div');
+            card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+            card.innerHTML = `
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-title">${achievement.name}</div>
+                <div class="achievement-desc">${achievement.description}</div>
+                <div class="achievement-status ${isUnlocked ? 'unlocked' : ''}">
+                    ${isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+        // Update counters
+        document.getElementById('unlocked-count').textContent = unlockedCount;
+        document.getElementById('total-count').textContent = achievements.length;
+    },
+    
     populateLevelUpCards: function() {
         const container = document.getElementById('upgrade-cards-container');
         container.innerHTML = '';
@@ -135,7 +208,8 @@ const UI = {
             UI.elements.menu, UI.elements.select, UI.elements.death,
             UI.elements.settings, UI.elements.upgrades, UI.elements.pause,
             UI.elements.levelUp, UI.elements.resetConfirm,
-			UI.elements.achievements
+            UI.elements.achievements, UI.elements.playerStats,
+            UI.elements.quitConfirm // Added
         ];
         
         // Hide all screens first
@@ -152,7 +226,8 @@ const UI = {
         const isOverlayState = (
             Game.state === 'PAUSED' || 
             Game.state === 'GAMEOVER' || 
-            Game.state === 'LEVELUP'
+            Game.state === 'LEVELUP' ||
+            Game.state === 'QUIT_CONFIRM' // Added
         );
 
         // Toggle overlay class on body
@@ -163,7 +238,7 @@ const UI = {
         }
 
         // Show HUD elements only during gameplay states
-        if (Game.state === 'PLAYING' || Game.state === 'PAUSED' || Game.state === 'GAMEOVER' || Game.state === 'LEVELUP') {
+        if (Game.state === 'PLAYING' || Game.state === 'PAUSED' || Game.state === 'GAMEOVER' || Game.state === 'LEVELUP' || Game.state === 'QUIT_CONFIRM') {
             UI.elements.hud.classList.remove('hidden');
             UI.elements.timer.classList.remove('hidden');
             UI.elements.expHeader.classList.remove('hidden');
@@ -189,7 +264,9 @@ const UI = {
         if (Game.state === 'UPGRADES') UI.elements.upgrades.classList.remove('hidden');
         if (Game.state === 'RESET_CONFIRM') UI.elements.resetConfirm.classList.remove('hidden');
         if (Game.state === 'LEVELUP') UI.elements.levelUp.classList.remove('hidden');
-		if (Game.state === 'ACHIEVEMENTS') UI.elements.achievements.classList.remove('hidden');
+        if (Game.state === 'ACHIEVEMENTS') UI.elements.achievements.classList.remove('hidden');
+        if (Game.state === 'PLAYER_STATS') UI.elements.playerStats.classList.remove('hidden');
+        if (Game.state === 'QUIT_CONFIRM') UI.elements.quitConfirm.classList.remove('hidden'); // Added
         
         // Update stats in pause menu
         if (Game.state === 'PAUSED' && Game.player) {
@@ -217,9 +294,10 @@ const UI = {
             else if (type === 'dmg') desc = `+${amount} Damage`;
             else if (type === 'crit') desc = `+${(amount * 100).toFixed(0)}% Crit Chance`;
             
+            document.getElementById(`desc-${type}`).textContent = desc;
+            
             const btn = document.querySelector(`button[onclick="Game.buyUpgrade('${type}')"]`);
             if (btn) {
-                btn.parentElement.querySelector('p:nth-of-type(1)').textContent = desc;
                 btn.textContent = Game.devMode ? `Buy (FREE)` : `Buy (${cost} Pts)`;
             }
         });
