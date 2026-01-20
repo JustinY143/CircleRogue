@@ -24,7 +24,7 @@ const UPGRADE_SYSTEM = {
 };
 
 const SPAWNING = {
-    BASE_SPAWN_RATE: 80,
+    BASE_SPAWN_RATE: 150,
     RAMP_SPAWN_TIME: 420,
     RAMP_SPAWN_RATE_MIN: 20,
     BOSS_SPAWN_TIME: 420,
@@ -125,4 +125,5 @@ const Utils = {
         // Cap delta time to prevent physics issues
         return Math.min(deltaTime / 16.67, 2.5); // Cap at 2.5x normal speed
     }
+
 };
