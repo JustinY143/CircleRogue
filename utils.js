@@ -7,7 +7,7 @@ const WORLD_HEIGHT = 5000;
 const DIFFICULTY_MODS = {
     BEGINNER: { hp: 0.7, dmg: 0.7, score: 0.5 },
     NOVICE:   { hp: 1.0, dmg: 1.0, score: 1.0 },
-    HARD:     { hp: 1.5, dmg: 1.5, score: 2.0 },
+    HARD:     { hp: 1.7, dmg: 1.7, score: 2.0 },
     UNKNOWN:  { hp: 3.0, dmg: 3.0, score: 4.0 }
 };
 
@@ -48,7 +48,7 @@ const COMBAT = {
 
 const EXP_SYSTEM = {
     BASE_EXP_PER_KILL: 5,
-    EXP_FORMULA: (level) => Math.floor(50 * Math.pow(level, 1.5))
+    EXP_FORMULA: (level) => Math.floor(50 * Math.pow(level, 1.3))
 };
 
 const UI_SETTINGS = {
@@ -127,4 +127,5 @@ const Utils = {
     }
 
 };
+
 
