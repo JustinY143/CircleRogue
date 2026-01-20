@@ -13,7 +13,7 @@ const DIFFICULTY_MODS = {
 
 const PLAYER_STATS = {
     GUNNER: { hp: 100, speed: 5 },
-    SWORDSMAN: { hp: 175, speed: 7 }
+    SWORDSMAN: { hp: 175, speed: 6.5 }
 };
 
 const UPGRADE_SYSTEM = {
@@ -37,9 +37,9 @@ const COMBAT = {
     BULLET_DAMAGE: 5,
     BULLET_LIFE: 180,
     
-    SWORD_COOLDOWN: 15,
+    SWORD_COOLDOWN: 20,
     SWORD_DAMAGE: 10,
-    SWORD_RADIUS: 220,
+    SWORD_RADIUS: 200,
     SWORD_ARC: Math.PI / 2.3,
     SWORD_DURATION: 10,
     
@@ -127,3 +127,4 @@ const Utils = {
     }
 
 };
+
