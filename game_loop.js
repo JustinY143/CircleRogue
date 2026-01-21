@@ -67,6 +67,10 @@ function update() {
     Game.slashes.forEach(s => s.update(player, timeScale));
     Game.particles.forEach(p => p.update(player, timeScale));
     Game.enemyProjectiles.forEach(ep => ep.update(timeScale));
+    
+    // Update Damage Numbers
+    Game.damageNumbers.forEach(dn => dn.update(timeScale));
+    
     Game.enemies.forEach(e => {
         e.update(player, Game.enemyProjectiles, timeScale); 
         if (Utils.getDist(e, player) < e.radius + player.radius) {
@@ -85,9 +89,13 @@ function update() {
     Game.bullets.forEach(b => {
         Game.enemies.forEach(e => {
             if (!b.dead && !e.dead && Utils.getDist(b, e) < b.radius + e.radius) {
-                let dmg = player.calculateDamage();
-                e.takeDamage(dmg); 
+                let dmgInfo = player.calculateDamage();
+                e.takeDamage(dmgInfo.val); 
                 b.dead = true;
+                
+                if (SETTINGS.SHOW_DAMAGE_NUMBERS) {
+                    Game.damageNumbers.push(new DamageNumber(e.x, e.y, dmgInfo.val, dmgInfo.isCrit));
+                }
             }
         });
     });
@@ -152,6 +160,7 @@ function update() {
     Game.enemies = Game.enemies.filter(e => !e.dead);
     Game.particles = Game.particles.filter(p => !p.dead);
     Game.slashes = Game.slashes.filter(s => s.life > 0);
+    Game.damageNumbers = Game.damageNumbers.filter(dn => dn.life > 0);
 
     // Update HUD
     UI.updateHUD();
@@ -194,6 +203,9 @@ function draw() {
         Game.enemyProjectiles.forEach(ep => ep.draw(CTX));
         Game.slashes.forEach(s => s.draw(CTX));
         player.draw(CTX);
+        
+        // Draw damage numbers last so they appear on top
+        Game.damageNumbers.forEach(dn => dn.draw(CTX));
         
         CTX.restore();
         

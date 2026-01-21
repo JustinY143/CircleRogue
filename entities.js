@@ -1,3 +1,36 @@
+class DamageNumber {
+    constructor(x, y, value, isCrit) {
+        this.x = x + (Math.random() * 20 - 10);
+        this.y = y - 10;
+        this.value = Math.floor(value);
+        this.life = 60; // 1 second at 60fps
+        this.maxLife = 60;
+        this.isCrit = isCrit;
+        this.vy = -1.5; // Float speed
+    }
+    
+    update(timeScale = 1) {
+        this.y += this.vy * timeScale;
+        this.life -= timeScale;
+    }
+    
+    draw(ctx) {
+        const opacity = Math.max(0, this.life / 20); // Fade out near end
+        ctx.globalAlpha = Math.min(1, opacity);
+        
+        ctx.font = this.isCrit ? "bold 24px Arial" : "bold 16px Arial";
+        ctx.fillStyle = this.isCrit ? "#ff00ff" : "#ffffff";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 3;
+        
+        const text = this.value.toString();
+        ctx.strokeText(text, this.x, this.y);
+        ctx.fillText(text, this.x, this.y);
+        
+        ctx.globalAlpha = 1;
+    }
+}
+
 class Player {
     constructor(x, y, color, upgrades, baseHp, baseSpeed) {
         this.x = x; this.y = y; this.radius = 20; this.color = color;
@@ -9,8 +42,9 @@ class Player {
         this.maxHp = baseHp + bonusHP;
         this.hp = this.maxHp;
         
+        // Store stats differently now for percentage calc
         this.stats = {
-            dmg: (stats.dmg || 0) * Utils.getUpgradeAmount('dmg'),
+            dmgLevel: (stats.dmg || 0), // Store the level, not the raw value
             critChance: (stats.crit || 0) * Utils.getUpgradeAmount('crit'),
             speed: baseSpeed
         };
@@ -22,15 +56,30 @@ class Player {
 
     calculateDamage() {
         const baseDamage = (this instanceof Gunner) ? SETTINGS.BULLET_DAMAGE : SETTINGS.SWORD_DAMAGE;
-        const totalDamage = baseDamage + this.stats.dmg;
+        const level = this.stats.dmgLevel;
+        const amount = SETTINGS.UPGRADE_SYSTEM.dmg.amount;
+        
+        // Calculate Damage based on toggle
+        let damage = 0;
+        if (USE_CUMULATIVE_DMG) {
+            damage = baseDamage * Math.pow(1 + amount, level);
+        } else {
+            // Additive: Base * (1 + (level * 20%))
+            damage = baseDamage * (1 + (level * amount));
+        }
         
         let multiplier = 1;
+        let isCrit = false;
         let chance = this.stats.critChance;
         while (chance > 0) {
-            if (Math.random() < chance) multiplier *= 2; 
+            if (Math.random() < chance) {
+                multiplier *= 2;
+                isCrit = true;
+            }
             chance -= 1.0;
         }
-        return totalDamage * multiplier;
+        
+        return { val: damage * multiplier, isCrit: isCrit };
     }
 
     updateBase(keys, timeScale = 1) {
@@ -73,6 +122,7 @@ class Player {
     }
     
     getStats() {
+        // Utils.calculateTotalDamage now handles the percentage math too
         const totalDamage = Utils.calculateTotalDamage(this);
         
         return {
@@ -123,8 +173,11 @@ class Swordsman extends Player {
                 while (diff < -Math.PI) diff += Math.PI * 2;
                 while (diff > Math.PI) diff -= Math.PI * 2;
                 if (Math.abs(diff) < SETTINGS.SWORD_ARC / 2) {
-                    let dmg = this.calculateDamage();
-                    e.takeDamage(dmg);
+                    let dmgInfo = this.calculateDamage();
+                    e.takeDamage(dmgInfo.val);
+                    if (SETTINGS.SHOW_DAMAGE_NUMBERS) {
+                        Game.damageNumbers.push(new DamageNumber(e.x, e.y, dmgInfo.val, dmgInfo.isCrit));
+                    }
                 }
             }
         });
@@ -200,9 +253,13 @@ class Slash {
 
 class Particle {
     constructor(x, y, val) {
-        this.x = x; this.y = y; this.value = val; this.radius = 5; this.dead = false;
+        this.x = x; this.y = y; this.value = val; 
+        // Scale radius with value, but cap it so it doesn't cover the screen
+        // Logarithmic scale works best for this
+        this.radius = 2 + Math.min(Math.log(val + 1) * 2, 10); 
+        this.dead = false;
         const a = Math.random()*Math.PI*2;
-        this.vx = Math.cos(a)*5; this.vy = Math.sin(a)*5;
+        this.vx = Math.cos(a)*2; this.vy = Math.sin(a)*2;
     }
     update(player, timeScale = 1) {
         this.x += this.vx * timeScale; 

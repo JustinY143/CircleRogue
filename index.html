@@ -173,6 +173,63 @@
             border-color: #00d4ff;
         }
 
+        /* NEW SWITCH STYLES */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 350px;
+            margin-bottom: 20px;
+            background: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .setting-label {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .switch-btn {
+            background: #333;
+            width: 80px;
+            height: 34px;
+            border-radius: 17px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #555;
+        }
+        .switch-btn::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .switch-btn.active {
+            background: #008800;
+            border-color: #00ff00;
+        }
+        .switch-btn.active::after {
+            transform: translateX(46px);
+        }
+        .switch-text {
+            position: absolute;
+            right: -40px;
+            color: white;
+            font-weight: bold;
+            width: 30px;
+        }
+
+
         .flyout { 
             position: absolute; 
             left: 100%; 
@@ -738,6 +795,7 @@
         <div id="pause-menu" class="screen center-screen hidden">
             <h1>PAUSED</h1>
             <button class="menu-btn btn-centered" onclick="Game.togglePause()">RESUME</button>
+            <button class="menu-btn btn-centered" onclick="Game.toSettings('PAUSED')">SETTINGS</button>
             <button class="menu-btn btn-centered" onclick="Game.showQuitConfirm()">QUIT TO MENU</button>
             <div id="pause-stats"></div>
         </div>
@@ -761,7 +819,7 @@
                 </div>
                 <div class="upgrade-card">
                     <h3>STRENGTH</h3>
-                    <p id="desc-dmg">+2 Damage</p>
+                    <p id="desc-dmg">+20% Damage</p>
                     <p id="lvl-dmg">Lvl: 0</p>
                     <button class="upgrade-btn" onclick="Game.buyUpgrade('dmg')">Buy (1500 Pts)</button>
                 </div>
@@ -777,14 +835,25 @@
         
         <div id="settings-menu" class="screen center-screen hidden">
 			<h1>SETTINGS</h1>
-			<div style="color:white; font-size:24px; margin-bottom: 20px;">
+			
+            <div class="setting-row">
+                <div class="setting-label">Show FPS</div>
+                <div id="fps-switch" class="switch-btn" onclick="Game.toggleFPS()">
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-label">Damage Numbers</div>
+                <div id="dmg-switch" class="switch-btn" onclick="Game.toggleDamageNumbers()">
+                </div>
+            </div>
+
+			<div style="color:white; font-size:24px; margin-bottom: 20px; margin-top: 20px;">
 				Crosshair Color: 
 				<input type="color" id="crosshairColorPicker" value="#ff69b4" onchange="Game.updateCrosshairColor(this.value)">
 			</div>
-			<button id="toggle-fps-btn" class="menu-btn btn-centered" style="width:250px; margin-bottom: 20px;" onclick="Game.toggleFPS()">
-				${Game.saveData.showFPS ? 'Hide FPS' : 'Show FPS'}
-			</button>
-			<button class="menu-btn btn-centered" style="width:200px;" onclick="Game.toMainMenu()">BACK</button>
+
+			<button class="menu-btn btn-centered" style="width:200px;" onclick="Game.exitSettings()">BACK</button>
 			<button id="btn-reset" onclick="Game.resetProgress()">RESET DATA</button>
 		</div>
 

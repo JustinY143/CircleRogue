@@ -2,17 +2,28 @@ const Game = {
     state: 'MENU',
     isPaused: false,
     isTimePaused: false,
-    player: null, bullets: [], enemies: [], particles: [], slashes: [], enemyProjectiles: [],
+    player: null, 
+    bullets: [], 
+    enemies: [], 
+    particles: [], 
+    slashes: [], 
+    enemyProjectiles: [],
+    damageNumbers: [], // Array for floating damage numbers
+    
     frameCount: 0, score: 0, startTime: 0, elapsedTime: 0, lastUpdateTime: 0,
     bossActive: false,
     devMode: false,
     showFPS: false,
+    previousState: 'MENU', // For navigation
     
     // Track kills for achievements
     currentRunKills: 0,
     // Track no-hit boss attempt
     bossHitDuringFight: false,
     bossFightStarted: false,
+    
+    // Flag to ensure we don't double count playtime on death + exit
+    runStatsSaved: false,
     
     ZOOM_LEVEL: 1.15,
 
@@ -22,6 +33,7 @@ const Game = {
         unlockedHardBoss: false,
         pendingUnlockNotification: false,
         showFPS: false,
+        showDamageNumbers: true, // Default true
         achievements: {
             unlocked: {},
             bossKillsByDiff: {},
@@ -41,7 +53,7 @@ const Game = {
 
     upgradePool: [
         { id: 'hp', title: 'Vitality', desc: 'Max HP +10', icon: '[ + ]' },
-        { id: 'dmg', title: 'Strength', desc: 'Attack DMG +2', icon: '[ ! ]' },
+        { id: 'dmg', title: 'Strength', desc: 'Damage +20%', icon: '[ ! ]' },
         { id: 'crit', title: 'Deadly Aim', desc: 'Crit Chance +5%', icon: '[ * ]' },
         { id: 'heal', title: 'Recovery', desc: 'Heal 25% HP', icon: '[ H ]' }
     ],
@@ -60,7 +72,7 @@ const Game = {
             Game.player.maxHp += Utils.getUpgradeAmount('hp');
             Game.player.hp += Utils.getUpgradeAmount('hp');
         } else if (id === 'dmg') {
-            Game.player.stats.dmg += Utils.getUpgradeAmount('dmg');
+            Game.player.stats.dmgLevel++; // Increase the level multiplier
         } else if (id === 'crit') {
             Game.player.stats.critChance += Utils.getUpgradeAmount('crit');
         } else if (id === 'heal') {
@@ -82,6 +94,11 @@ const Game = {
             
             // Load FPS setting
             Game.showFPS = Game.saveData.showFPS || false;
+            
+            // Load Damage Numbers setting
+            if (Game.saveData.showDamageNumbers !== undefined) {
+                SETTINGS.SHOW_DAMAGE_NUMBERS = Game.saveData.showDamageNumbers;
+            }
             
             if (!Game.saveData.achievements) {
                 Game.saveData.achievements = {
@@ -177,9 +194,27 @@ const Game = {
         }
     },
 
-    toSettings: function() { 
+    toSettings: function(fromState) { 
+        if (fromState) {
+            Game.previousState = fromState;
+        } else {
+            // If called without arg, assume we came from main menu or pause depending on current state
+            if (Game.state === 'PAUSED') Game.previousState = 'PAUSED';
+            else Game.previousState = 'MENU';
+        }
+        
         Game.state = 'SETTINGS'; 
         UI.update(); 
+    },
+    
+    exitSettings: function() {
+        // Return to where we came from
+        if (Game.previousState === 'PAUSED') {
+            Game.state = 'PAUSED';
+        } else {
+            Game.state = 'MENU';
+        }
+        UI.update();
     },
     
     updateCrosshairColor: function(color) { 
@@ -190,7 +225,14 @@ const Game = {
         Game.showFPS = !Game.showFPS;
         Game.saveData.showFPS = Game.showFPS;
         Game.save();
-        UI.updateFPSButton();
+        UI.updateSettingsSwitches();
+    },
+
+    toggleDamageNumbers: function() {
+        SETTINGS.SHOW_DAMAGE_NUMBERS = !SETTINGS.SHOW_DAMAGE_NUMBERS;
+        Game.saveData.showDamageNumbers = SETTINGS.SHOW_DAMAGE_NUMBERS;
+        Game.save();
+        UI.updateSettingsSwitches();
     },
     
     toCharSelect: function() { 
@@ -203,8 +245,10 @@ const Game = {
         Game.isPaused = false;
         Game.isTimePaused = false;
         
-        if (Game.saveData.achievements) {
-            Game.saveData.achievements.totalPlayTime += Game.elapsedTime || 0;
+        // BUG FIX: Only add play time if it hasn't been saved yet for this run
+        if (Game.saveData.achievements && !Game.runStatsSaved && Game.elapsedTime > 0) {
+            Game.saveData.achievements.totalPlayTime += Game.elapsedTime;
+            Game.runStatsSaved = true;
             Game.save();
         }
         
@@ -234,7 +278,13 @@ const Game = {
     },
 
     start: function(classType) {
-        Game.bullets = []; Game.enemies = []; Game.particles = []; Game.slashes = []; Game.enemyProjectiles = [];
+        Game.bullets = []; 
+        Game.enemies = []; 
+        Game.particles = []; 
+        Game.slashes = []; 
+        Game.enemyProjectiles = [];
+        Game.damageNumbers = []; // Clear damage numbers
+        
         Game.score = 0; Game.startTime = Date.now(); Game.elapsedTime = 0; 
         Game.isPaused = false; Game.isTimePaused = false;
         Game.frameCount = 0;
@@ -247,6 +297,7 @@ const Game = {
         Game.currentRunKills = 0;
         Game.bossHitDuringFight = false;
         Game.bossFightStarted = false;
+        Game.runStatsSaved = false; // Reset stats saved flag
         
         Spawner.bossSpawned = false; 
         Game.bossActive = false;
@@ -270,8 +321,9 @@ const Game = {
         
         Game.saveData.points += pointsEarned;
         
-        if (Game.saveData.achievements) {
+        if (Game.saveData.achievements && !Game.runStatsSaved) {
             Game.saveData.achievements.totalPlayTime += Game.elapsedTime;
+            Game.runStatsSaved = true; // Mark as saved so we don't save again in toMainMenu
         }
         
         if (Achievements && Achievements.recordRunStats) {

@@ -70,10 +70,25 @@ const UI = {
         }
     },
     
-    updateFPSButton: function() {
-        const fpsButton = document.getElementById('toggle-fps-btn');
-        if (fpsButton) {
-            fpsButton.textContent = Game.showFPS ? 'Hide FPS' : 'Show FPS';
+    updateSettingsSwitches: function() {
+        // Update FPS Switch
+        const fpsSwitch = document.getElementById('fps-switch');
+        if (fpsSwitch) {
+            if (Game.showFPS) {
+                fpsSwitch.classList.add('active');
+            } else {
+                fpsSwitch.classList.remove('active');
+            }
+        }
+        
+        // Update Damage Numbers Switch
+        const dmgSwitch = document.getElementById('dmg-switch');
+        if (dmgSwitch) {
+            if (SETTINGS.SHOW_DAMAGE_NUMBERS) {
+                dmgSwitch.classList.add('active');
+            } else {
+                dmgSwitch.classList.remove('active');
+            }
         }
     },
     
@@ -253,7 +268,7 @@ const UI = {
         if (Game.state === 'GAMEOVER') UI.elements.death.classList.remove('hidden');
         if (Game.state === 'SETTINGS') {
             UI.elements.settings.classList.remove('hidden');
-            UI.updateFPSButton();
+            UI.updateSettingsSwitches();
         }
         if (Game.state === 'PAUSED') UI.elements.pause.classList.remove('hidden');
         if (Game.state === 'UPGRADES') UI.elements.upgrades.classList.remove('hidden');
@@ -284,7 +299,7 @@ const UI = {
             
             let desc = '';
             if (type === 'hp') desc = `+${amount} Max HP`;
-            else if (type === 'dmg') desc = `+${amount} Damage`;
+            else if (type === 'dmg') desc = `+${(amount * 100).toFixed(0)}% Damage`;
             else if (type === 'crit') desc = `+${(amount * 100).toFixed(0)}% Crit Chance`;
             
             document.getElementById(`desc-${type}`).textContent = desc;
